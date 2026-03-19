@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queimada Mobile</title>
+    <title>Queimada Mobile - Realtime</title>
     <style>
         body { font-family: sans-serif; background: #eceff1; padding: 10px; margin: 0; }
         h1 { text-align: center; font-size: 1.5rem; color: #1a237e; }
@@ -81,95 +81,136 @@
         </div>
     </section>
 
-    <button class="btn-reset" onclick="limparTudo()">ZERAR TUDO</button>
+    <button class="btn-reset" onclick="limparBanco()">ZERAR BANCO DE DADOS</button>
 </div>
 
-<script>
-const timesM = ["4°A1", "4°A2", "4°B1", "4°B2", "5°A1", "5°A2", "5°B1", "5°B2"];
-const timesT = ["3°C", "3°B1", "3°B2", "4°C1", "4°C2", "5°C1", "5°C2"];
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-let db = JSON.parse(localStorage.getItem('bd_queimada')) || { manha: {}, tarde: {} };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDPmyf4FhiPC-HNw_maPv1VRIaGTzHpFEc",
+        authDomain: "interclassequeimada.firebaseapp.com",
+        projectId: "interclassequeimada",
+        storageBucket: "interclassequeimada.firebasestorage.app",
+        messagingSenderId: "366267653198",
+        databaseURL: "https://interclassequeimada-default-rtdb.firebaseio.com",
+        appId: "1:366267653198:web:650743ca118bc8c239771f"
+    };
 
-function atualizar() {
-    processar('manha', timesM);
-    processar('tarde', timesT);
-    localStorage.setItem('bd_queimada', JSON.stringify(db));
-}
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const rootRef = ref(db, 'queimada_db');
 
-function processar(periodo, lista) {
-    let stats = {};
-    lista.forEach(t => stats[t] = { j:0, v:0, d:0, f:0, s:0 });
+    const timesM = ["4°A1", "4°A2", "4°B1", "4°B2", "5°A1", "5°A2", "5°B1", "5°B2"];
+    const timesT = ["3°C", "3°B1", "3°B2", "4°C1", "4°C2", "5°C1", "5°C2"];
 
-    const cards = document.querySelectorAll(`#jogos-${periodo} .jogo-card`);
-    cards.forEach(card => {
-        const t1 = card.dataset.t1;
-        const t2 = card.dataset.t2;
-        const v1 = parseInt(card.querySelector('.v1').value);
-        const v2 = parseInt(card.querySelector('.v2').value);
-
-        db[periodo][`${t1}x${t2}`] = { v1, v2 };
-
-        if (!isNaN(v1) && !isNaN(v2)) {
-            stats[t1].j++; stats[t2].j++;
-            stats[t1].f += v1; stats[t1].s += v2;
-            stats[t2].f += v2; stats[t2].s += v1;
-            if (v1 > v2) { stats[t1].v++; stats[t2].d++; }
-            else if (v2 > v1) { stats[t2].v++; stats[t1].d++; }
-        }
-    });
-
-    let rank = lista.map(t => ({
-        n: t, 
-        j: stats[t].j, v: stats[t].v, d: stats[t].d,
-        sq: stats[t].f - stats[t].s,
-        p: stats[t].j > 0 ? parseFloat(((stats[t].v / stats[t].j) * 100).toFixed(1)) : 0
-    })).sort((a,b) => {
-        if (b.p !== a.p) return b.p - a.p;
-        if (b.v !== a.v) return b.v - a.v;
-        return b.sq - a.sq;
-    });
-
-    document.querySelector(`#tabela-${periodo} tbody`).innerHTML = rank.map((r, i) => `
-        <tr class="${i < 4 && r.j>0 ? 'pos-1' : ''}">
-            <td>${r.n}</td><td>${r.j}</td><td>${r.v}</td><td>${r.d}</td><td>${r.sq}</td><td>${r.p}%</td>
-        </tr>
-    `).join('');
-}
-
-function init() {
-    ['manha', 'tarde'].forEach(p => {
-        const lista = p === 'manha' ? timesM : timesT;
-        let html = '';
-        for(let i=0; i<lista.length; i++) {
-            for(let j=i+1; j<lista.length; j++) {
-                const id = `${lista[i]}x${lista[j]}`;
-                const s = db[p][id] || {v1:'', v2:''};
-                html += `
-                    <div class="jogo-card" data-t1="${lista[i]}" data-t2="${lista[j]}">
-                        <span class="time-label">${lista[i]}</span>
-                        <div class="inputs-container">
-                            <input type="number" class="v1" value="${s.v1}" oninput="atualizar()">
-                            <span>×</span>
-                            <input type="number" class="v2" value="${s.v2}" oninput="atualizar()">
-                        </div>
-                        <span class="time-label" style="text-align:right">${lista[j]}</span>
-                    </div>
-                `;
+    // 1. Criar os cards vazios uma única vez ao carregar
+    function criarCardsIniciais() {
+        ['manha', 'tarde'].forEach(p => {
+            const lista = p === 'manha' ? timesM : timesT;
+            let html = '';
+            for(let i=0; i<lista.length; i++) {
+                for(let j=i+1; j<lista.length; j++) {
+                    const t1 = lista[i], t2 = lista[j];
+                    const id = `${p}-${t1}x${t2}`.replace(/°/g, ''); // ID limpo para o DOM
+                    html += `
+                        <div class="jogo-card" id="card-${id}">
+                            <span class="time-label">${t1}</span>
+                            <div class="inputs-container">
+                                <input type="number" class="v1" data-p="${p}" data-t1="${t1}" data-t2="${t2}">
+                                <span>×</span>
+                                <input type="number" class="v2" data-p="${p}" data-t1="${t1}" data-t2="${t2}">
+                            </div>
+                            <span class="time-label" style="text-align:right">${t2}</span>
+                        </div>`;
+                }
             }
-        }
-        document.getElementById(`jogos-${p}`).innerHTML = html;
-    });
-    atualizar();
-}
+            document.getElementById(`jogos-${p}`).innerHTML = html;
+        });
 
-function limparTudo() {
-    if(confirm("Apagar todos os resultados salvos?")) {
-        localStorage.clear();
-        location.reload();
+        // Adicionar os eventos de input sem reconstruir a tela
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const { p, t1, t2 } = e.target.dataset;
+                const container = e.target.parentElement;
+                const v1 = container.querySelector('.v1').value;
+                const v2 = container.querySelector('.v2').value;
+                
+                set(ref(db, `queimada_db/${p}/${t1}x${t2}`), {
+                    v1: parseInt(v1) || 0,
+                    v2: parseInt(v2) || 0
+                });
+            });
+        });
     }
-}
 
-window.onload = init;
+    // 2. Escutar mudanças e atualizar APENAS os valores e a tabela
+    onValue(rootRef, (snapshot) => {
+        const data = snapshot.val() || { manha: {}, tarde: {} };
+        
+        // Atualizar inputs sem perder o foco (apenas se o valor for diferente)
+        ['manha', 'tarde'].forEach(p => {
+            const lista = p === 'manha' ? timesM : timesT;
+            const periodoData = data[p] || {};
+            
+            // Lógica de Classificação
+            let stats = {};
+            lista.forEach(t => stats[t] = { j:0, v:0, d:0, f:0, s:0 });
+
+            for(let i=0; i<lista.length; i++) {
+                for(let j=i+1; j<lista.length; j++) {
+                    const t1 = lista[i], t2 = lista[j];
+                    const idJogo = `${t1}x${t2}`;
+                    const placar = periodoData[idJogo] || {v1:'', v2:''};
+                    
+                    // Atualiza o input visualmente apenas se o usuário não estiver editando ele agora
+                    const idDOM = `${p}-${t1}x${t2}`.replace(/°/g, '');
+                    const input1 = document.querySelector(`#card-${idDOM} .v1`);
+                    const input2 = document.querySelector(`#card-${idDOM} .v2`);
+                    
+                    if (document.activeElement !== input1) input1.value = placar.v1;
+                    if (document.activeElement !== input2) input2.value = placar.v2;
+
+                    const v1 = parseInt(placar.v1), v2 = parseInt(placar.v2);
+                    if (!isNaN(v1) && !isNaN(v2)) {
+                        stats[t1].j++; stats[t2].j++;
+                        stats[t1].f += v1; stats[t1].s += v2;
+                        stats[t2].f += v2; stats[t2].s += v1;
+                        if (v1 > v2) { stats[t1].v++; stats[t2].d++; }
+                        else if (v2 > v1) { stats[t2].v++; stats[t1].d++; }
+                    }
+                }
+            }
+            atualizarTabelaVisual(p, lista, stats);
+        });
+    });
+
+    function atualizarTabelaVisual(periodo, lista, stats) {
+        let rank = lista.map(t => ({
+            n: t, j: stats[t].j, v: stats[t].v, d: stats[t].d,
+            sq: stats[t].f - stats[t].s,
+            p: stats[t].j > 0 ? parseFloat(((stats[t].v / stats[t].j) * 100).toFixed(1)) : 0
+        })).sort((a,b) => {
+            if (b.p !== a.p) return b.p - a.p;
+            if (b.v !== a.v) return b.v - a.v;
+            return b.sq - a.sq;
+        });
+
+        document.querySelector(`#tabela-${periodo} tbody`).innerHTML = rank.map((r, i) => `
+            <tr class="${i < 4 && r.j>0 ? 'pos-1' : ''}">
+                <td>${r.n}</td><td>${r.j}</td><td>${r.v}</td><td>${r.d}</td><td>${r.sq}</td><td>${r.p}%</td>
+            </tr>
+        `).join('');
+    }
+
+    window.limparBanco = function() {
+        if(confirm("Isso apagará os dados de TODOS os usuários. Confirmar?")) {
+            remove(rootRef).then(() => location.reload());
+        }
+    };
+
+    criarCardsIniciais();
 </script>
 </body>
 </html>
