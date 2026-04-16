@@ -11,23 +11,15 @@
         .container { max-width: 100%; margin: auto; }
         .jogos-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         .jogo-card { 
-            background: #fff; 
-            padding: 12px; 
-            border-radius: 8px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
+            background: #fff; padding: 12px; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: space-between;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .time-label { font-weight: bold; font-size: 0.85rem; width: 35%; }
         .inputs-container { display: flex; align-items: center; gap: 5px; }
         input[type="number"] { 
-            width: 45px; 
-            height: 35px; 
-            text-align: center; 
-            font-size: 1rem; 
-            border: 2px solid #ddd; 
-            border-radius: 5px;
+            width: 45px; height: 35px; text-align: center; 
+            font-size: 1rem; border: 2px solid #ddd; border-radius: 5px;
         }
         .table-wrapper { overflow-x: auto; background: #fff; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -53,9 +45,7 @@
         <div class="table-wrapper">
             <table id="tabela-manha">
                 <thead>
-                    <tr>
-                        <th>Time</th><th>J</th><th>V</th><th>D</th><th>SQ</th><th>%</th>
-                    </tr>
+                    <tr><th>Time</th><th>J</th><th>V</th><th>D</th><th>SQ</th><th>%</th></tr>
                 </thead>
                 <tbody></tbody>
             </table>
@@ -72,9 +62,7 @@
         <div class="table-wrapper">
             <table id="tabela-tarde">
                 <thead>
-                    <tr>
-                        <th>Time</th><th>J</th><th>V</th><th>D</th><th>SQ</th><th>%</th>
-                    </tr>
+                    <tr><th>Time</th><th>J</th><th>V</th><th>D</th><th>SQ</th><th>%</th></tr>
                 </thead>
                 <tbody></tbody>
             </table>
@@ -105,7 +93,8 @@
     const timesM = ["4°A1", "4°A2", "4°B1", "4°B2", "5°A1", "5°A2", "5°B1", "5°B2"];
     const timesT = ["3°C", "3°B1", "3°B2", "4°C1", "4°C2", "5°C1", "5°C2"];
 
-    // 1. Criar os cards vazios uma única vez ao carregar
+    let dadosAtuais = {};
+
     function criarCardsIniciais() {
         ['manha', 'tarde'].forEach(p => {
             const lista = p === 'manha' ? timesM : timesT;
@@ -113,9 +102,9 @@
             for(let i=0; i<lista.length; i++) {
                 for(let j=i+1; j<lista.length; j++) {
                     const t1 = lista[i], t2 = lista[j];
-                    const id = `${p}-${t1}x${t2}`.replace(/°/g, ''); // ID limpo para o DOM
+                    const idDOM = `${p}-${t1}x${t2}`.replace(/°/g, '');
                     html += `
-                        <div class="jogo-card" id="card-${id}">
+                        <div class="jogo-card" id="card-${idDOM}">
                             <span class="time-label">${t1}</span>
                             <div class="inputs-container">
                                 <input type="number" class="v1" data-p="${p}" data-t1="${t1}" data-t2="${t2}">
@@ -129,32 +118,28 @@
             document.getElementById(`jogos-${p}`).innerHTML = html;
         });
 
-        // Adicionar os eventos de input sem reconstruir a tela
         document.querySelectorAll('input[type="number"]').forEach(input => {
             input.addEventListener('input', (e) => {
                 const { p, t1, t2 } = e.target.dataset;
                 const container = e.target.parentElement;
-                const v1 = container.querySelector('.v1').value;
-                const v2 = container.querySelector('.v2').value;
-                
+                const v1Raw = container.querySelector('.v1').value;
+                const v2Raw = container.querySelector('.v2').value;
+
                 set(ref(db, `queimada_db/${p}/${t1}x${t2}`), {
-                    v1: parseInt(v1) || 0,
-                    v2: parseInt(v2) || 0
+                    v1: v1Raw === "" ? "" : parseInt(v1Raw),
+                    v2: v2Raw === "" ? "" : parseInt(v2Raw)
                 });
             });
         });
     }
 
-    // 2. Escutar mudanças e atualizar APENAS os valores e a tabela
     onValue(rootRef, (snapshot) => {
         const data = snapshot.val() || { manha: {}, tarde: {} };
+        dadosAtuais = data;
         
-        // Atualizar inputs sem perder o foco (apenas se o valor for diferente)
         ['manha', 'tarde'].forEach(p => {
             const lista = p === 'manha' ? timesM : timesT;
             const periodoData = data[p] || {};
-            
-            // Lógica de Classificação
             let stats = {};
             lista.forEach(t => stats[t] = { j:0, v:0, d:0, f:0, s:0 });
 
@@ -164,21 +149,19 @@
                     const idJogo = `${t1}x${t2}`;
                     const placar = periodoData[idJogo] || {v1:'', v2:''};
                     
-                    // Atualiza o input visualmente apenas se o usuário não estiver editando ele agora
                     const idDOM = `${p}-${t1}x${t2}`.replace(/°/g, '');
-                    const input1 = document.querySelector(`#card-${idDOM} .v1`);
-                    const input2 = document.querySelector(`#card-${idDOM} .v2`);
+                    const in1 = document.querySelector(`#card-${idDOM} .v1`);
+                    const in2 = document.querySelector(`#card-${idDOM} .v2`);
                     
-                    if (document.activeElement !== input1) input1.value = placar.v1;
-                    if (document.activeElement !== input2) input2.value = placar.v2;
+                    if (document.activeElement !== in1) in1.value = placar.v1;
+                    if (document.activeElement !== in2) in2.value = placar.v2;
 
-                    const v1 = parseInt(placar.v1), v2 = parseInt(placar.v2);
-                    if (!isNaN(v1) && !isNaN(v2)) {
+                    if (Number.isInteger(placar.v1) && Number.isInteger(placar.v2)) {
                         stats[t1].j++; stats[t2].j++;
-                        stats[t1].f += v1; stats[t1].s += v2;
-                        stats[t2].f += v2; stats[t2].s += v1;
-                        if (v1 > v2) { stats[t1].v++; stats[t2].d++; }
-                        else if (v2 > v1) { stats[t2].v++; stats[t1].d++; }
+                        stats[t1].f += placar.v1; stats[t1].s += placar.v2;
+                        stats[t2].f += placar.v2; stats[t2].s += placar.v1;
+                        if (placar.v1 > placar.v2) { stats[t1].v++; stats[t2].d++; }
+                        else if (placar.v2 > placar.v1) { stats[t2].v++; stats[t1].d++; }
                     }
                 }
             }
@@ -192,9 +175,27 @@
             sq: stats[t].f - stats[t].s,
             p: stats[t].j > 0 ? parseFloat(((stats[t].v / stats[t].j) * 100).toFixed(1)) : 0
         })).sort((a,b) => {
+            // 1. Porcentagem (%)
             if (b.p !== a.p) return b.p - a.p;
+            // 2. Vitórias (V)
             if (b.v !== a.v) return b.v - a.v;
-            return b.sq - a.sq;
+            // 3. Saldo de Queimados (SQ)
+            if (b.sq !== a.sq) return b.sq - a.sq;
+            
+            // 4. Confronto Direto (Último critério)
+            const jogosPeriodo = dadosAtuais[periodo] || {};
+            // Tenta encontrar o jogo (pode estar salvo como AxB ou BxA na lógica original)
+            const jogo1 = jogosPeriodo[`${a.n}x${b.n}`];
+            const jogo2 = jogosPeriodo[`${b.n}x${a.n}`];
+
+            if (jogo1 && Number.isInteger(jogo1.v1) && Number.isInteger(jogo1.v2)) {
+                return jogo1.v2 - jogo1.v1; // Se v1 > v2, 'a' ganha (retorna negativo)
+            }
+            if (jogo2 && Number.isInteger(jogo2.v1) && Number.isInteger(jogo2.v2)) {
+                return jogo2.v1 - jogo2.v2; // Se v2 > v1, 'a' ganha (retorna negativo)
+            }
+
+            return 0;
         });
 
         document.querySelector(`#tabela-${periodo} tbody`).innerHTML = rank.map((r, i) => `
