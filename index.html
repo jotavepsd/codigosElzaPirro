@@ -309,16 +309,8 @@ td:nth-child(2) {
     color: #555;
     background: #f5f5f5;
 }
-
-.status-firebase.online {
-    color: #2e7d32;
-    background: #e8f5e9;
-}
-
-.status-firebase.offline {
-    color: #e65100;
-    background: #fff3e0;
-}
+.status-firebase.online { color: #2e7d32; background: #e8f5e9; }
+.status-firebase.offline { color: #e65100; background: #fff3e0; }
 
 /* =========================
    MOBILE
@@ -474,59 +466,15 @@ const firebaseConfig = {
         "1:366267653198:web:650743ca118bc8c239771f"
 };
 
-// =========================================================
-// FIREBASE — inicialização segura
-// A interface funciona mesmo se o Firebase estiver indisponível.
-// =========================================================
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const rootRef = db.ref("volei_2026");
 
-let db = null;
-let rootRef = null;
-let firebaseOnline = false;
-
+// Compatibilidade com o restante do código original
 const ref = (database, path) => database.ref(path);
 const set = (reference, value) => reference.set(value);
 const remove = (reference) => reference.remove();
-const onValue = (reference, callback, errorCallback) =>
-    reference.on("value", callback, errorCallback);
-
-function atualizarStatusFirebase(mensagem, tipo = "normal") {
-    let el = document.getElementById("statusFirebase");
-    if (!el) return;
-
-    el.textContent = mensagem;
-    el.className = `status-firebase ${tipo}`;
-}
-
-function inicializarFirebase() {
-    try {
-        if (!window.firebase) {
-            throw new Error("Biblioteca Firebase não carregada.");
-        }
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        db = firebase.database();
-        rootRef = db.ref("volei_2026");
-        firebaseOnline = true;
-
-        atualizarStatusFirebase("🟢 Banco de dados conectado", "online");
-        iniciarLeituraFirebase();
-
-    } catch (error) {
-        firebaseOnline = false;
-        console.error("Erro ao inicializar Firebase:", error);
-
-        atualizarStatusFirebase(
-            "🟠 Banco de dados indisponível — tabela carregada localmente",
-            "offline"
-        );
-
-        // Mesmo sem Firebase, a interface continua funcionando.
-        atualizarTabelas();
-    }
-}
+const onValue = (reference, callback, errorCallback) => reference.on("value", callback, errorCallback);
 
 // =========================================================
 // TIMES
@@ -1007,11 +955,6 @@ async function salvarPlacar(event) {
         valor2 === ""
     ) {
 
-        if (!firebaseOnline || !db) {
-            salvarLocalmente();
-            return;
-        }
-
         await remove(
             ref(
                 db,
@@ -1096,27 +1039,33 @@ async function salvarPlacar(event) {
 
     try {
 
-        const resultado = {
-            time1,
-            time2,
-            pontos1,
-            pontos2
-        };
+        await set(
 
-        if (firebaseOnline && db) {
-            await set(
-                ref(
-                    db,
-                    `volei_2026/${periodo}/${idSeguro(grupo)}/${jogoId}`
-                ),
-                resultado
-            );
+            ref(
+                db,
+                `volei_2026/${periodo}/${idSeguro(grupo)}/${jogoId}`
+            ),
 
-            mostrarStatus(jogoId, "Resultado salvo ✓");
-        } else {
-            salvarLocalmente();
-            mostrarStatus(jogoId, "Salvo neste navegador ✓");
-        }
+            {
+
+                time1,
+
+                time2,
+
+                pontos1,
+
+                pontos2
+
+            }
+
+        );
+
+
+        mostrarStatus(
+            jogoId,
+            "Resultado salvo ✓"
+        );
+
 
     } catch (error) {
 
@@ -1464,6 +1413,8 @@ if (
     );
 
 }
+            });
+
     return ranking;
 
 }
@@ -1739,52 +1690,49 @@ function atualizarInputs() {
 
 
 // =========================================================
-// ARMAZENAMENTO LOCAL — usado como fallback
+// FIREBASE EM TEMPO REAL
 // =========================================================
 
-const STORAGE_KEY = "interclasse_volei_2026";
+function atualizarStatusFirebase(mensagem, tipo = "normal") {
+    const el = document.getElementById("statusFirebase");
+    if (!el) return;
+    el.textContent = mensagem;
+    el.className = `status-firebase ${tipo}`;
+}
 
-function salvarLocalmente() {
+function iniciarFirebase() {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dadosAtuais));
+        atualizarStatusFirebase("🔄 Conectando ao banco...", "normal");
+
+        onValue(
+            rootRef,
+            snapshot => {
+                dadosAtuais = snapshot.val() || {};
+                atualizarStatusFirebase("🟢 Banco de dados conectado", "online");
+                atualizarInputs();
+                atualizarTabelas();
+            },
+            error => {
+                console.error("Erro ao carregar Firebase:", error);
+                atualizarStatusFirebase(
+                    "🟠 Não foi possível conectar ao banco de dados",
+                    "offline"
+                );
+                atualizarInputs();
+                atualizarTabelas();
+            }
+        );
+    } catch (error) {
+        console.error("Erro ao iniciar Firebase:", error);
+        atualizarStatusFirebase(
+            "🔴 Firebase não pôde ser iniciado. Verifique a internet.",
+            "offline"
+        );
         atualizarInputs();
         atualizarTabelas();
-    } catch (error) {
-        console.error("Erro ao salvar localmente:", error);
     }
 }
 
-function carregarLocalmente() {
-    try {
-        const salvo = localStorage.getItem(STORAGE_KEY);
-        if (salvo) {
-            dadosAtuais = JSON.parse(salvo) || {};
-        }
-    } catch (error) {
-        console.error("Erro ao carregar dados locais:", error);
-        dadosAtuais = {};
-    }
-}
-
-function iniciarLeituraFirebase() {
-    if (!rootRef) {
-        return;
-    }
-
-    // =========================================================
-// INICIAR FIREBASE SEM BLOQUEAR A INTERFACE
-// =========================================================
-
-carregarLocalmente();
-atualizarStatusFirebase(
-    "🔄 Carregando tabela...",
-    "normal"
-);
-atualizarInputs();
-atualizarTabelas();
-
-// O Firebase é inicializado depois que a interface já foi criada.
-setTimeout(inicializarFirebase, 100);
 
 // =========================================================
 // ZERAR BANCO
@@ -1813,20 +1761,16 @@ window.limparBanco =
 
         try {
 
-            dadosAtuais = {};
-            localStorage.removeItem(STORAGE_KEY);
+            await remove(rootRef);
 
-            if (firebaseOnline && rootRef) {
-                await remove(rootRef);
-            }
 
             alert(
-                firebaseOnline
-                    ? "Banco de dados zerado com sucesso."
-                    : "Dados locais zerados com sucesso."
+                "Banco de dados zerado com sucesso."
             );
 
+
             location.reload();
+
 
         } catch (error) {
 
@@ -2019,6 +1963,7 @@ document.addEventListener("click", event => {
 // =========================================================
 
 criarInterface();
+iniciarFirebase();
 
 </script>
 
