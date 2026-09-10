@@ -58,7 +58,7 @@ const campeonato = {
 
         "Grupo C": [
             "Plumas Reais",
-            "Presas Reais",
+            "Presas Selvagens",
             "Asas Negras"
         ],
 
@@ -712,29 +712,36 @@ window.alterarTorcida =
 // CALCULAR CLASSIFICAÇÃO
 // =========================================================
 
-function calcularClassificacao(
-    periodo,
-    grupo,
-    times
-) {
+.sort((a, b) => {
 
-    const jogos =
-        dadosAtuais
-            ?. [periodo]
-            ?. [idSeguro(grupo)]
-        || {};
+    // 1º TOTAL
+    // Total = PTS + torcida
 
+    if (b.total !== a.total) {
+        return b.total - a.total;
+    }
 
-    const torcida =
-        dadosAtuais
-            ?. [periodo]
-            ?. torcida
-            ?. [idSeguro(grupo)]
-        || {};
+    // 2º SALDO
 
+    if (b.saldo !== a.saldo) {
+        return b.saldo - a.saldo;
+    }
 
-    const stats = {};
+    // 3º PONTOS DAS PARTIDAS
 
+    if (b.pontos !== a.pontos) {
+        return b.pontos - a.pontos;
+    }
+
+    // 4º TORCIDA
+
+    if (b.torcida !== a.torcida) {
+        return b.torcida - a.torcida;
+    }
+
+    return 0;
+
+});
 
     // =====================================================
     // INICIALIZAR TIMES
