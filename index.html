@@ -483,7 +483,7 @@ const campeonato = {
 
         "Grupo C": [
             "Plumas Reais",
-            "Presas Reais",
+            "Presas Selvagens",
             "Asas Negras"
         ],
 
@@ -1340,56 +1340,64 @@ function calcularClassificacao(
             .sort((a, b) => {
 
 
-                // 1º PONTOS DAS PARTIDAS
+                // 1º TOTAL
 
-                if (
-                    b.pontos !==
-                    a.pontos
-                ) {
+if (
+    b.total !==
+    a.total
+) {
 
-                    return (
-                        b.pontos -
-                        a.pontos
-                    );
+    return (
+        b.total -
+        a.total
+    );
 
-                }
-
-
-                // 2º SALDO
-
-                if (
-                    b.saldo !==
-                    a.saldo
-                ) {
-
-                    return (
-                        b.saldo -
-                        a.saldo
-                    );
-
-                }
+}
 
 
-                // 3º TORCIDA
+// 2º SALDO
 
-                if (
-                    b.torcida !==
-                    a.torcida
-                ) {
+if (
+    b.saldo !==
+    a.saldo
+) {
 
-                    return (
-                        b.torcida -
-                        a.torcida
-                    );
+    return (
+        b.saldo -
+        a.saldo
+    );
 
-                }
-
-
-                return 0;
-
-            });
+}
 
 
+// 3º PTS
+
+if (
+    b.pontos !==
+    a.pontos
+) {
+
+    return (
+        b.pontos -
+        a.pontos
+    );
+
+}
+
+
+// 4º TORCIDA
+
+if (
+    b.torcida !==
+    a.torcida
+) {
+
+    return (
+        b.torcida -
+        a.torcida
+    );
+
+}
     return ranking;
 
 }
