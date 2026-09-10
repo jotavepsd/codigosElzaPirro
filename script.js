@@ -890,56 +890,28 @@ window.alterarTorcida =
             }))
             .sort((a, b) => {
 
+    // 1º TOTAL
+    if (b.total !== a.total) {
+        return b.total - a.total;
+    }
 
-                // 1º PONTOS DAS PARTIDAS
+    // 2º SALDO
+    if (b.saldo !== a.saldo) {
+        return b.saldo - a.saldo;
+    }
 
-                if (
-                    b.pontos !==
-                    a.pontos
-                ) {
+    // 3º PTS
+    if (b.pontos !== a.pontos) {
+        return b.pontos - a.pontos;
+    }
 
-                    return (
-                        b.pontos -
-                        a.pontos
-                    );
+    // 4º TORCIDA
+    if (b.torcida !== a.torcida) {
+        return b.torcida - a.torcida;
+    }
 
-                }
-
-
-                // 2º SALDO
-
-                if (
-                    b.saldo !==
-                    a.saldo
-                ) {
-
-                    return (
-                        b.saldo -
-                        a.saldo
-                    );
-
-                }
-
-
-                // 3º TORCIDA
-
-                if (
-                    b.torcida !==
-                    a.torcida
-                ) {
-
-                    return (
-                        b.torcida -
-                        a.torcida
-                    );
-
-                }
-
-
-                return 0;
-
-            });
-
+    return 0;
+});
 
     return ranking;
 
