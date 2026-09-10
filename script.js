@@ -715,32 +715,26 @@ window.alterarTorcida =
 .sort((a, b) => {
 
     // 1º TOTAL
-    // Total = PTS + torcida
-
     if (b.total !== a.total) {
         return b.total - a.total;
     }
 
     // 2º SALDO
-
     if (b.saldo !== a.saldo) {
         return b.saldo - a.saldo;
     }
 
-    // 3º PONTOS DAS PARTIDAS
-
+    // 3º PTS
     if (b.pontos !== a.pontos) {
         return b.pontos - a.pontos;
     }
 
     // 4º TORCIDA
-
     if (b.torcida !== a.torcida) {
         return b.torcida - a.torcida;
     }
 
     return 0;
-
 });
 
     // =====================================================
