@@ -1,2019 +1,1364 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interclasse de Vôlei 2026</title>
-<style>
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background: #eceff1;
-    margin: 0;
-    padding: 10px;
-    color: #222;
-}
-
-.container {
-    max-width: 900px;
-    margin: auto;
-}
-
-/* =========================
-   TÍTULO
-========================= */
-
-h1 {
-    text-align: center;
-    color: #1a237e;
-    margin-bottom: 5px;
-}
-
-.subtitulo {
-    text-align: center;
-    color: #555;
-    margin-top: 0;
-    margin-bottom: 25px;
-}
-
-/* =========================
-   TÍTULOS DAS SEÇÕES
-========================= */
-
-h2 {
-    background: #1a237e;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 1.15rem;
-    margin-top: 25px;
-}
-
-h3 {
-    margin: 0 0 12px;
-    color: #1a237e;
-}
-
-/* =========================
-   GRUPOS
-========================= */
-
-.grupo {
-    background: #fff;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 20px;
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* =========================
-   JOGOS
-========================= */
-
-.jogos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.jogo {
-    background: #f8f9fa;
-
-    border: 1px solid #ddd;
-    border-radius: 8px;
-
-    padding: 12px;
-}
-
-.jogo-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    gap: 10px;
-}
-
-.time {
-    font-weight: bold;
-    width: 35%;
-}
-
-.time-direita {
-    text-align: right;
-}
-
-/* =========================
-   PLACAR
-========================= */
-
-.placar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.placar input {
-    width: 55px;
-    height: 40px;
-
-    text-align: center;
-
-    font-size: 1.1rem;
-    font-weight: bold;
-
-    border: 2px solid #ccc;
-    border-radius: 6px;
-}
-
-.placar input:focus {
-    border-color: #3949ab;
-    outline: none;
-}
-
-.vs {
-    font-weight: bold;
-}
-
-/* =========================
-   STATUS
-========================= */
-
-.status {
-    font-size: 0.8rem;
-    margin-top: 6px;
-
-    min-height: 15px;
-
-    color: #777;
-}
-
-/* =========================
-   CLASSIFICAÇÃO
-========================= */
-
-.classificacao {
-    overflow-x: auto;
-    margin-top: 15px;
-}
-
-.classificacao-titulo {
-    margin-top: 20px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-
-    min-width: 600px;
-}
-
-th,
-td {
-    border: 1px solid #ddd;
-
-    padding: 9px 6px;
-
-    text-align: center;
-}
-
-th {
-    background: #3949ab;
-    color: white;
-}
-
-td:first-child {
-    text-align: center;
-    font-weight: bold;
-}
-
-td:nth-child(2) {
-    text-align: left;
-    font-weight: bold;
-}
-
-/* =========================
-   CLASSIFICADOS
-========================= */
-
-.classificado {
-    background: #69f0ae;
-    font-weight: bold;
-}
-
-/* =========================
-   TORCIDA
-========================= */
-
-.torcida-buttons {
-    display: flex;
-
-    justify-content: center;
-
-    gap: 5px;
-
-    margin-top: 5px;
-}
-
-.btn-torcida {
-    border: none;
-
-    border-radius: 6px;
-
-    padding: 7px 12px;
-
-    font-weight: bold;
-
-    cursor: pointer;
-}
-
-.btn-menos {
-    background: #ef5350;
-    color: white;
-}
-
-.btn-mais {
-    background: #43a047;
-    color: white;
-}
-
-.btn-torcida:hover {
-    opacity: 0.85;
-}
-
-/* =========================
-   LEGENDA
-========================= */
-
-.legenda {
-    font-size: 0.8rem;
-
-    color: #555;
-
-    margin-top: 8px;
-}
-
-/* =========================
-   BOTÃO RESET
-========================= */
-
-.btn-reset {
-    width: 100%;
-
-    margin: 30px 0;
-
-    padding: 15px;
-
-    background: #d32f2f;
-
-    color: white;
-
-    border: none;
-
-    border-radius: 8px;
-
-    font-size: 1rem;
-
-    font-weight: bold;
-
-    cursor: pointer;
-}
-
-.btn-reset:hover {
-    background: #b71c1c;
-}
-
-/* =========================
-   CARREGAMENTO
-========================= */
-
-.carregando {
-    text-align: center;
-
-    padding: 20px;
-
-    color: #555;
-}
-
-.status-firebase {
-    text-align: center;
-    margin: 8px auto 18px;
-    padding: 7px 12px;
-    border-radius: 999px;
-    width: fit-content;
-    max-width: 100%;
-    font-size: .85rem;
-    color: #555;
-    background: #f5f5f5;
-}
-.status-firebase.online { color: #2e7d32; background: #e8f5e9; }
-.status-firebase.offline { color: #e65100; background: #fff3e0; }
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 500px) {
-
-    h1 {
-        font-size: 1.4rem;
-    }
-
-    .jogo-header {
-        gap: 5px;
-    }
-
-    .time {
-        width: 32%;
-
-        font-size: 0.8rem;
-    }
-
-    .placar input {
-        width: 48px;
-
-        height: 38px;
-    }
-
-    table {
-        font-size: 0.78rem;
-    }
-
-    th,
-    td {
-        padding: 7px 4px;
-    }
-}
-
-
-.acoes-topo{display:flex;justify-content:flex-end;margin:10px 0 15px}.btn-imprimir,.btn-imprimir-grupo,.btn-classificar{border:none;border-radius:7px;padding:9px 14px;font-weight:bold;cursor:pointer;background:#3949ab;color:#fff}.btn-imprimir:hover,.btn-imprimir-grupo:hover,.btn-classificar:hover{opacity:.9}.btn-classificar:disabled{opacity:.45;cursor:not-allowed}.classificacao-cabecalho{display:flex;justify-content:space-between;align-items:center;gap:10px}.painel-classificacao{background:#f5f7ff;border:1px solid #d8dcf0;border-radius:8px;padding:12px;margin-top:15px}.painel-classificacao-topo{display:flex;justify-content:space-between;align-items:center;gap:12px}.config-classificacao{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.config-classificacao select{padding:8px;border:1px solid #bbb;border-radius:6px}.switch{position:relative;display:inline-block;width:46px;height:24px;flex:none}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;cursor:pointer;background:#bbb;border-radius:24px;transition:.2s}.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#3949ab}.switch input:checked+.slider:before{transform:translateX(22px)}.status-classificacao{margin-top:4px;font-size:.8rem}.classificacao-inativa{color:#777}.classificacao-pendente{color:#ef6c00}.classificacao-alerta{color:#c62828;font-weight:bold}.classificacao-confirmada{color:#2e7d32;font-weight:bold}
-</style>
-
-<style id="estilos-modal-impressao">
-.modal-impressao-tabelas {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 999999;
-}
-.modal-impressao-tabelas.aberta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.modal-impressao-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,.62);
-}
-.modal-impressao-conteudo {
-    position: relative;
-    z-index: 2;
-    width: min(680px, calc(100vw - 30px));
-    max-height: calc(100vh - 40px);
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.35);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.modal-impressao-cabecalho {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 20px 22px 15px;
-    border-bottom: 1px solid #ddd;
-}
-.modal-impressao-cabecalho h2 { margin: 0 0 5px; font-size: 21px; }
-.modal-impressao-cabecalho p { margin: 0; color: #666; }
-.btn-fechar-modal-impressao {
-    border: 0; background: transparent; color: #555;
-    font-size: 30px; line-height: 1; cursor: pointer;
-}
-.acoes-modal-impressao {
-    display: flex; gap: 8px; padding: 12px 22px;
-    border-bottom: 1px solid #eee;
-}
-.acoes-modal-impressao button,
-.rodape-modal-impressao button {
-    border: 1px solid #ccc; border-radius: 7px; padding: 8px 11px;
-    background: #f7f7f7; cursor: pointer; font-weight: 600;
-}
-.lista-tabelas-impressao { overflow-y: auto; padding: 15px 22px; min-height: 160px; }
-.item-tabela-impressao {
-    display: flex; align-items: center; gap: 12px;
-    padding: 13px; margin-bottom: 8px; border: 1px solid #ddd;
-    border-radius: 9px; cursor: pointer;
-}
-.item-tabela-impressao:hover { background: #f7f7f7; }
-.item-tabela-impressao input { width: 20px; height: 20px; cursor: pointer; }
-.item-tabela-texto { display: flex; flex-direction: column; gap: 3px; }
-.item-tabela-texto strong { font-size: 16px; }
-.item-tabela-texto small { color: #777; }
-.impressao-vazia { text-align: center; color: #777; padding: 35px 10px; }
-.rodape-modal-impressao {
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 10px; padding: 14px 22px; border-top: 1px solid #ddd; background: #fafafa;
-}
-.rodape-modal-impressao-acoes { display: flex; gap: 8px; }
-#btnImprimirSelecionadas { background: #198754; border-color: #198754; color: #fff; }
-#btnImprimirSelecionadas:disabled { opacity: .45; cursor: not-allowed; }
-body.modal-impressao-aberta { overflow: hidden; }
-</style>
-
-</head>
-<body>
-<div class="container">
-<h1>🏐 Interclasse de Vôlei 2026</h1>
-<p class="subtitulo">1 set corrido • Vitória = 3 pontos</p>
-<div class="acoes-topo"><button class="btn-imprimir" onclick="abrirImpressaoTabelas()">🖨️ IMPRIMIR TABELAS</button></div>
-<div id="statusFirebase" class="status-firebase">Inicializando...</div>
-<div id="app"></div>
-<button class="btn-reset" onclick="limparBanco()">ZERAR BANCO DE DADOS</button>
-</div>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script>
-// =========================================================
-// FIREBASE (COMPAT — funciona sem servidor/localmente)
-// =========================================================
-
-const firebaseConfig = {
-
-    apiKey:
-        "AIzaSyDPmyf4FhiPC-HNw_maPv1VRIaGTzHpFEc",
-
-    authDomain:
-        "interclassequeimada.firebaseapp.com",
-
-    projectId:
-        "interclassequeimada",
-
-    storageBucket:
-        "interclassequeimada.firebasestorage.app",
-
-    messagingSenderId:
-        "366267653198",
-
-    databaseURL:
-        "https://interclassequeimada-default-rtdb.firebaseio.com",
-
-    appId:
-        "1:366267653198:web:650743ca118bc8c239771f"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const rootRef = db.ref("volei_2026");
-
-// Compatibilidade com o restante do código original
-const ref = (database, path) => database.ref(path);
-const set = (reference, value) => reference.set(value);
-const remove = (reference) => reference.remove();
-const onValue = (reference, callback, errorCallback) => reference.on("value", callback, errorCallback);
-
-// =========================================================
-// TIMES
-// =========================================================
-
-const campeonato = {
-
-    manha: {
-
-        "Grupo A": [
-            "Garras Noturnas",
-            "Imperadores do Gelo",
-            "Guardas de Ferro"
-        ],
-
-        "Grupo B": [
-            "Ventos Celestes",
-            "Presas Prateadas",
-            "Dragões Celestiais"
-        ],
-
-        "Grupo C": [
-            "Plumas Reais",
-            "Presas Selvagens",
-            "Asas Negras"
-        ],
-
-        "Grupo D": [
-            "Olhos da Noite",
-            "Guardiões do Gelo",
-            "Asas Imperiais"
-        ]
-    },
-
-
-    tarde: {
-
-        "Grupo A": [
-            "Fúrias do Norte",
-            "Gigantes da Ilha",
-            "Reis Implacáveis",
-            "Garras de Neve"
-        ],
-
-        "Grupo B": [
-            "Garras de Ouro",
-            "Lanças do Mar",
-            "Ecos da Sombra"
-        ],
-
-        "Grupo C": [
-            "Ferrões de Fogo",
-            "Mestres Astutos",
-            "Ilusionistas"
-        ]
-    }
-
-};
-
-
-// =========================================================
-// QUANTIDADE DE CLASSIFICADOS
-// =========================================================
-
-const classificados = {
-
-    manha: {
-
-        "Grupo A": 1,
-        "Grupo B": 1,
-        "Grupo C": 1,
-        "Grupo D": 1
-
-    },
-
-    tarde: {
-
-        "Grupo A": 2,
-        "Grupo B": 1,
-        "Grupo C": 1
-
-    }
-
-};
-
-
-// =========================================================
-// DADOS ATUAIS
-// =========================================================
-
-let dadosAtuais = {};
-
-
-// =========================================================
-// FUNÇÃO PARA CRIAR ID SEGURO
-// =========================================================
-
-function idSeguro(texto) {
-
-    return texto
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9]/g, "-")
-        .toLowerCase();
-}
-
-
-// =========================================================
-// ID DO JOGO
-// =========================================================
-
-function criarIdJogo(time1, time2) {
-
-    return `${idSeguro(time1)}_x_${idSeguro(time2)}`;
-
-}
-
-
-// =========================================================
-// CRIAR INTERFACE
-// =========================================================
-
-function criarInterface() {
-
-    const app = document.getElementById("app");
-
-    let html = "";
-
-
-    // =====================================================
-    // MANHÃ E TARDE
-    // =====================================================
-
-    for (const periodo of ["manha", "tarde"]) {
-
-        const titulo =
-            periodo === "manha"
-                ? "🌅 Jogos da Manhã"
-                : "🌇 Jogos da Tarde";
-
-
-        html += `
-            <section>
-
-                <h2>${titulo}</h2>
-        `;
-
-
-        // =================================================
-        // GRUPOS
-        // =================================================
-
-        for (const grupoNome in campeonato[periodo]) {
-
-            const grupoId =
-                `${periodo}-${idSeguro(grupoNome)}`;
-
-
-            html += `
-
-                <div class="grupo">
-
-                    <h3>${grupoNome}</h3>
-
-                    <div
-                        class="jogos"
-                        id="jogos-${grupoId}">
-                    </div>
-
-
-                    <div class="classificacao">
-
-                        <h3 class="classificacao-titulo">
-                            Classificação
-                        </h3>
-
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-
-                                    <th>Pos.</th>
-
-                                    <th>Equipe</th>
-
-                                    <th>J</th>
-
-                                    <th>V</th>
-
-                                    <th>D</th>
-
-                                    <th>PTS</th>
-
-                                    <th>Saldo</th>
-
-                                    <th>Torcida</th>
-
-                                    <th>Total</th>
-
-                                </tr>
-
-                            </thead>
-
-
-                            <tbody
-                                id="tabela-${grupoId}">
-                            </tbody>
-
-                        </table>
-
-
-                        <div class="legenda">
-
-                            PTS = pontos das partidas |
-                            Saldo = pontos feitos - sofridos |
-                            Total = PTS + torcida
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            `;
-        }
-
-
-        html += `
-            </section>
-        `;
-    }
-
-
-    app.innerHTML = html;
-
-
-    criarJogos();
-
-}
-
-
-// =========================================================
-// CRIAR JOGOS
-// =========================================================
-
-function criarJogos() {
-
-    for (const periodo of ["manha", "tarde"]) {
-
-        for (const grupoNome in campeonato[periodo]) {
-
-            const times =
-                campeonato[periodo][grupoNome];
-
-
-            const grupoId =
-                `${periodo}-${idSeguro(grupoNome)}`;
-
-
-            const container =
-                document.getElementById(
-                    `jogos-${grupoId}`
-                );
-
-
-            let html = "";
-
-
-            // =============================================
-            // TODAS AS COMBINAÇÕES
-            // =============================================
-
-            for (
-                let i = 0;
-                i < times.length;
-                i++
-            ) {
-
-                for (
-                    let j = i + 1;
-                    j < times.length;
-                    j++
-                ) {
-
-                    const time1 = times[i];
-
-                    const time2 = times[j];
-
-
-                    const jogoId =
-                        criarIdJogo(
-                            time1,
-                            time2
-                        );
-
-
-                    html += `
-
-                        <div
-                            class="jogo"
-                            data-jogo="${jogoId}">
-
-                            <div class="jogo-header">
-
-
-                                <span class="time">
-                                    ${time1}
-                                </span>
-
-
-                                <div class="placar">
-
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        class="placar1"
-
-                                        data-periodo="${periodo}"
-
-                                        data-grupo="${grupoNome}"
-
-                                        data-time1="${time1}"
-
-                                        data-time2="${time2}"
-
-                                        aria-label="Pontos ${time1}"
-                                    >
-
-
-                                    <span class="vs">
-                                        ×
-                                    </span>
-
-
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        class="placar2"
-
-                                        data-periodo="${periodo}"
-
-                                        data-grupo="${grupoNome}"
-
-                                        data-time1="${time1}"
-
-                                        data-time2="${time2}"
-
-                                        aria-label="Pontos ${time2}"
-                                    >
-
-                                </div>
-
-
-                                <span
-                                    class="time time-direita">
-
-                                    ${time2}
-
-                                </span>
-
-
-                            </div>
-
-
-                            <div
-                                class="status"
-                                id="status-${jogoId}">
-                            </div>
-
-                        </div>
-
-                    `;
-                }
-            }
-
-
-            container.innerHTML = html;
-
-        }
-    }
-
-
-    adicionarEventosPlacar();
-
-}
-
-
-// =========================================================
-// EVENTOS DOS INPUTS
-// =========================================================
-
-function adicionarEventosPlacar() {
-
-    document
-        .querySelectorAll(
-            ".placar1, .placar2"
-        )
-        .forEach(input => {
-
-            input.addEventListener(
-                "change",
-                salvarPlacar
-            );
-
-        });
-
-}
-
-
-// =========================================================
-// SALVAR PLACAR
-// =========================================================
-
-async function salvarPlacar(event) {
-
-    const input = event.target;
-
-
-    const periodo =
-        input.dataset.periodo;
-
-
-    const grupo =
-        input.dataset.grupo;
-
-
-    const time1 =
-        input.dataset.time1;
-
-
-    const time2 =
-        input.dataset.time2;
-
-
-    const jogoId =
-        criarIdJogo(
-            time1,
-            time2
-        );
-
-
-    const jogoElement =
-        document.querySelector(
-            `[data-jogo="${jogoId}"]`
-        );
-
-
-    const input1 =
-        jogoElement.querySelector(
-            ".placar1"
-        );
-
-
-    const input2 =
-        jogoElement.querySelector(
-            ".placar2"
-        );
-
-
-    const valor1 =
-        input1.value.trim();
-
-
-    const valor2 =
-        input2.value.trim();
-
-
-    // =====================================================
-    // APAGAR RESULTADO
-    // =====================================================
-
-    if (
-        valor1 === "" &&
-        valor2 === ""
-    ) {
-
-        await remove(
-            ref(
-                db,
-                `volei_2026/${periodo}/${idSeguro(grupo)}/${jogoId}`
-            )
-        );
-
-        return;
-
-    }
-
-
-    // =====================================================
-    // UM CAMPO VAZIO
-    // =====================================================
-
-    if (
-        valor1 === "" ||
-        valor2 === ""
-    ) {
-
-        mostrarStatus(
-            jogoId,
-            "Informe os dois placares."
-        );
-
-        return;
-
-    }
-
-
-    const pontos1 =
-        Number(valor1);
-
-
-    const pontos2 =
-        Number(valor2);
-
-
-    // =====================================================
-    // VALIDAR NÚMEROS
-    // =====================================================
-
-    if (
-        !Number.isInteger(pontos1) ||
-        !Number.isInteger(pontos2) ||
-        pontos1 < 0 ||
-        pontos2 < 0
-    ) {
-
-        mostrarStatus(
-            jogoId,
-            "Digite números inteiros positivos."
-        );
-
-        return;
-
-    }
-
-
-    // =====================================================
-    // NÃO PERMITIR EMPATE
-    // =====================================================
-
-    if (
-        pontos1 === pontos2
-    ) {
-
-        mostrarStatus(
-            jogoId,
-            "A partida não pode terminar empatada."
-        );
-
-        return;
-
-    }
-
-
-    // =====================================================
-    // SALVAR
-    // =====================================================
-
-    try {
-
-        await set(
-
-            ref(
-                db,
-                `volei_2026/${periodo}/${idSeguro(grupo)}/${jogoId}`
-            ),
-
-            {
-
-                time1,
-
-                time2,
-
-                pontos1,
-
-                pontos2
-
-            }
-
-        );
-
-
-        mostrarStatus(
-            jogoId,
-            "Resultado salvo ✓"
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-
-        mostrarStatus(
-            jogoId,
-            "Erro ao salvar resultado."
-        );
-
-    }
-
-}
-
-
-// =========================================================
-// STATUS DO JOGO
-// =========================================================
-
-function mostrarStatus(
-    jogoId,
-    mensagem
-) {
-
-    const elemento =
-        document.getElementById(
-            `status-${jogoId}`
-        );
-
-
-    if (!elemento) {
-        return;
-    }
-
-
-    elemento.textContent =
-        mensagem;
-
-
-    setTimeout(() => {
-
-        elemento.textContent = "";
-
-    }, 2500);
-
-}
-
-
-// =========================================================
-// TORCIDA
-// =========================================================
-
-async function alterarTorcida(
-    periodo,
-    grupo,
-    time,
-    quantidade
-) {
-
-    const atual =
-        dadosAtuais
-            ?. [periodo]
-            ?. torcida
-            ?. [idSeguro(grupo)]
-            ?. [idSeguro(time)]
-        || 0;
-
-
-    const novoValor =
-        Math.max(
-            0,
-            atual + quantidade
-        );
-
-
-    try {
-
-        await set(
-
-            ref(
-                db,
-                `volei_2026/${periodo}/torcida/${idSeguro(grupo)}/${idSeguro(time)}`
-            ),
-
-            novoValor
-
-        );
-
-    } catch (error) {
-
-        console.error(error);
-
-
-        alert(
-            "Não foi possível atualizar a torcida."
-        );
-
-    }
-
-}
-
-
-window.alterarTorcida =
-    alterarTorcida;
-
-
-// =========================================================
-// CALCULAR CLASSIFICAÇÃO
-// =========================================================
-
-function calcularClassificacao(
-    periodo,
-    grupo,
-    times
-) {
-
-    const jogos =
-        dadosAtuais
-            ?. [periodo]
-            ?. [idSeguro(grupo)]
-        || {};
-
-
-    const torcida =
-        dadosAtuais
-            ?. [periodo]
-            ?. torcida
-            ?. [idSeguro(grupo)]
-        || {};
-
-
-    const stats = {};
-
-
-    // =====================================================
-    // INICIALIZAR TIMES
-    // =====================================================
-
-    times.forEach(time => {
-
-        stats[time] = {
-
-            jogos: 0,
-
-            vitorias: 0,
-
-            derrotas: 0,
-
-            pontos: 0,
-
-            feitos: 0,
-
-            sofridos: 0,
-
-            saldo: 0,
-
-            torcida:
-                torcida[
-                    idSeguro(time)
-                ] || 0
-
-        };
-
-    });
-
-
-    // =====================================================
-    // PROCESSAR JOGOS
-    // =====================================================
-
-    Object.values(jogos)
-        .forEach(jogo => {
-
-            if (
-                !jogo ||
-                !Number.isInteger(
-                    jogo.pontos1
-                ) ||
-                !Number.isInteger(
-                    jogo.pontos2
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            const t1 =
-                jogo.time1;
-
-
-            const t2 =
-                jogo.time2;
-
-
-            const p1 =
-                jogo.pontos1;
-
-
-            const p2 =
-                jogo.pontos2;
-
-
-            if (
-                !stats[t1] ||
-                !stats[t2]
-            ) {
-
-                return;
-
-            }
-
-
-            // Jogos
-            stats[t1].jogos++;
-
-            stats[t2].jogos++;
-
-
-            // Pontos feitos
-            stats[t1].feitos += p1;
-
-            stats[t2].feitos += p2;
-
-
-            // Pontos sofridos
-            stats[t1].sofridos += p2;
-
-            stats[t2].sofridos += p1;
-
-
-            // Vitória
-            if (p1 > p2) {
-
-                stats[t1].vitorias++;
-
-                stats[t1].pontos += 3;
-
-                stats[t2].derrotas++;
-
-            } else {
-
-                stats[t2].vitorias++;
-
-                stats[t2].pontos += 3;
-
-                stats[t1].derrotas++;
-
-            }
-
-        });
-
-
-    // =====================================================
-    // SALDO E TOTAL
-    // =====================================================
-
-    times.forEach(time => {
-
-        stats[time].saldo =
-            stats[time].feitos -
-            stats[time].sofridos;
-
-
-        stats[time].total =
-            stats[time].pontos +
-            stats[time].torcida;
-
-    });
-
-
-    // =====================================================
-    // RANKING
-    // =====================================================
-
-    const ranking =
-        times
-            .map(time => ({
-
-                nome: time,
-
-                ...stats[time]
-
-            }))
-            .sort((a, b) => {
-
-
-                // 1º TOTAL
-
-if (
-    b.total !==
-    a.total
-) {
-
-    return (
-        b.total -
-        a.total
-    );
-
-}
-
-
-// 2º SALDO
-
-if (
-    b.saldo !==
-    a.saldo
-) {
-
-    return (
-        b.saldo -
-        a.saldo
-    );
-
-}
-
-
-// 3º PTS
-
-if (
-    b.pontos !==
-    a.pontos
-) {
-
-    return (
-        b.pontos -
-        a.pontos
-    );
-
-}
-
-
-// 4º TORCIDA
-
-if (
-    b.torcida !==
-    a.torcida
-) {
-
-    return (
-        b.torcida -
-        a.torcida
-    );
-
-}
-            });
-
-    return ranking;
-
-}
-
-
-// =========================================================
-// ATUALIZAR TABELAS
-// =========================================================
-
-function atualizarTabelas() {
-
-    for (
-        const periodo
-        of ["manha", "tarde"]
-    ) {
-
-        for (
-            const grupoNome
-            in campeonato[periodo]
-        ) {
-
-            const times =
-                campeonato[periodo][grupoNome];
-
-
-            const ranking =
-                calcularClassificacao(
-                    periodo,
-                    grupoNome,
-                    times
-                );
-
-
-            const quantidadeClassificados =
-                classificados
-                    [periodo]
-                    [grupoNome];
-
-
-            const tabelaId =
-                `tabela-${periodo}-${idSeguro(grupoNome)}`;
-
-
-            const tbody =
-                document.getElementById(
-                    tabelaId
-                );
-
-
-            if (!tbody) {
-                continue;
-            }
-
-
-            tbody.innerHTML =
-
-                ranking
-                    .map((time, index) => {
-
-                        const posicao =
-                            index + 1;
-
-
-                        const classificado =
-                            posicao <=
-                            quantidadeClassificados;
-
-
-                        const saldoFormatado =
-                            time.saldo > 0
-                                ? `+${time.saldo}`
-                                : time.saldo;
-
-
-                        return `
-
-                            <tr class="${
-                                classificado
-                                    ? "classificado"
-                                    : ""
-                            }">
-
-                                <td>
-                                    ${posicao}º
-                                </td>
-
-
-                                <td>
-                                    ${time.nome}
-                                </td>
-
-
-                                <td>
-                                    ${time.jogos}
-                                </td>
-
-
-                                <td>
-                                    ${time.vitorias}
-                                </td>
-
-
-                                <td>
-                                    ${time.derrotas}
-                                </td>
-
-
-                                <td>
-                                    ${time.pontos}
-                                </td>
-
-
-                                <td>
-                                    ${saldoFormatado}
-                                </td>
-
-
-                                <td>
-
-                                    <strong>
-                                        ${time.torcida}
-                                    </strong>
-
-
-                                    <div
-                                        class="torcida-buttons">
-
-                                        <button
-                                            class="btn-torcida btn-menos"
-
-                                            onclick="
-                                                alterarTorcida(
-                                                    '${periodo}',
-                                                    '${grupoNome}',
-                                                    '${time.nome}',
-                                                    -1
-                                                )
-                                            "
-                                        >
-                                            −
-                                        </button>
-
-
-                                        <button
-                                            class="btn-torcida btn-mais"
-
-                                            onclick="
-                                                alterarTorcida(
-                                                    '${periodo}',
-                                                    '${grupoNome}',
-                                                    '${time.nome}',
-                                                    1
-                                                )
-                                            "
-                                        >
-                                            +1
-                                        </button>
-
-                                    </div>
-
-                                </td>
-
-
-                                <td>
-                                    <strong>
-                                        ${time.total}
-                                    </strong>
-                                </td>
-
-                            </tr>
-
-                        `;
-
-                    })
-                    .join("");
-
-        }
-
-    }
-
-}
-
-
-// =========================================================
-// ATUALIZAR INPUTS
-// =========================================================
-
-function atualizarInputs() {
-
-    for (
-        const periodo
-        of ["manha", "tarde"]
-    ) {
-
-        for (
-            const grupoNome
-            in campeonato[periodo]
-        ) {
-
-            const jogos =
-                dadosAtuais
-                    ?. [periodo]
-                    ?. [idSeguro(grupoNome)]
-                || {};
-
-
-            Object.values(jogos)
-                .forEach(jogo => {
-
-                    if (!jogo) {
-                        return;
-                    }
-
-
-                    const jogoId =
-                        criarIdJogo(
-                            jogo.time1,
-                            jogo.time2
-                        );
-
-
-                    const elemento =
-                        document.querySelector(
-                            `[data-jogo="${jogoId}"]`
-                        );
-
-
-                    if (!elemento) {
-                        return;
-                    }
-
-
-                    const input1 =
-                        elemento.querySelector(
-                            ".placar1"
-                        );
-
-
-                    const input2 =
-                        elemento.querySelector(
-                            ".placar2"
-                        );
-
-
-                    if (
-                        document.activeElement !==
-                        input1
-                    ) {
-
-                        input1.value =
-                            jogo.pontos1 ?? "";
-
-                    }
-
-
-                    if (
-                        document.activeElement !==
-                        input2
-                    ) {
-
-                        input2.value =
-                            jogo.pontos2 ?? "";
-
-                    }
-
-                });
-
-        }
-
-    }
-
-}
-
-
-// =========================================================
-// FIREBASE EM TEMPO REAL
-// =========================================================
-
-function atualizarStatusFirebase(mensagem, tipo = "normal") {
-    const el = document.getElementById("statusFirebase");
-    if (!el) return;
-    el.textContent = mensagem;
-    el.className = `status-firebase ${tipo}`;
-}
-
-function iniciarFirebase() {
-    try {
-        atualizarStatusFirebase("🔄 Conectando ao banco...", "normal");
-
-        onValue(
-            rootRef,
-            snapshot => {
-                dadosAtuais = snapshot.val() || {};
-                atualizarStatusFirebase("🟢 Banco de dados conectado", "online");
-                atualizarInputs();
-                atualizarTabelas();
-            },
-            error => {
-                console.error("Erro ao carregar Firebase:", error);
-                atualizarStatusFirebase(
-                    "🟠 Não foi possível conectar ao banco de dados",
-                    "offline"
-                );
-                atualizarInputs();
-                atualizarTabelas();
-            }
-        );
-    } catch (error) {
-        console.error("Erro ao iniciar Firebase:", error);
-        atualizarStatusFirebase(
-            "🔴 Firebase não pôde ser iniciado. Verifique a internet.",
-            "offline"
-        );
-        atualizarInputs();
-        atualizarTabelas();
-    }
-}
-
-
-// =========================================================
-// ZERAR BANCO
-// =========================================================
-
-window.limparBanco =
-    async function () {
-
-        const confirmar =
-            confirm(
-
-                "ATENÇÃO!\n\n" +
-
-                "Isso apagará TODOS os " +
-                "resultados e pontos de torcida.\n\n" +
-
-                "Deseja realmente continuar?"
-
-            );
-
-
-        if (!confirmar) {
-            return;
-        }
-
-
-        try {
-
-            await remove(rootRef);
-
-
-            alert(
-                "Banco de dados zerado com sucesso."
-            );
-
-
-            location.reload();
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            alert(
-                "Erro ao zerar o banco de dados."
-            );
-
-        }
-
-    };
-
-
-// =========================================================
-// IMPRESSÃO DAS TABELAS — MODAL DE SELEÇÃO
-// =========================================================
-
-function obterGruposParaImpressao() {
-    return Array.from(document.querySelectorAll(".grupo")).map((grupo, index) => {
-        const titulo = grupo.querySelector(":scope > h3")?.textContent?.trim()
-            || `Grupo ${index + 1}`;
-        const classificacao = grupo.querySelector(":scope > .classificacao");
-        const tabela = classificacao?.querySelector("table");
-
-        return {
-            index,
-            nome: titulo.replace(/\\s+/g, " ").trim(),
-            grupo,
-            tabela,
-            classificacao
-        };
-    }).filter(item => item.tabela);
-}
-
-function atualizarContadorImpressao() {
-    const checks = document.querySelectorAll(".checkbox-tabela-impressao");
-    const quantidade = Array.from(checks).filter(check => check.checked).length;
-    const contador = document.getElementById("contadorTabelasSelecionadas");
-    const botao = document.getElementById("btnImprimirSelecionadas");
-
-    if (contador) {
-        contador.textContent = quantidade === 1
-            ? "1 tabela selecionada"
-            : `${quantidade} tabelas selecionadas`;
-    }
-
-    if (botao) {
-        botao.disabled = quantidade === 0;
-    }
-}
-
-function fecharModalImpressao() {
-    const modal = document.getElementById("modalImpressaoTabelas");
-    if (!modal) return;
-
-    modal.classList.remove("aberta");
-    modal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-impressao-aberta");
-}
-
-function abrirImpressaoTabelas() {
-    const modal = document.getElementById("modalImpressaoTabelas");
-    const lista = document.getElementById("listaTabelasImpressao");
-
-    if (!modal || !lista) {
-        console.error("Modal de impressão não encontrada no HTML.");
-        return;
-    }
-
-    const grupos = obterGruposParaImpressao();
-    lista.innerHTML = "";
-
-    if (!grupos.length) {
-        lista.innerHTML = `
-            <div class="impressao-vazia">
-                Nenhuma tabela de classificação foi encontrada.
-            </div>
-        `;
-    } else {
-        grupos.forEach(item => {
-            const label = document.createElement("label");
-            label.className = "item-tabela-impressao";
-            label.innerHTML = `
-                <input type="checkbox" class="checkbox-tabela-impressao" data-index="${item.index}">
-                <span class="item-tabela-texto">
-                    <strong>${item.nome}</strong>
-                    <small>Selecionar esta tabela para impressão</small>
-                </span>
-            `;
-            lista.appendChild(label);
-        });
-    }
-
-    modal.classList.add("aberta");
-    modal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("modal-impressao-aberta");
-    atualizarContadorImpressao();
-}
-
-function imprimirTabelasSelecionadas() {
-    const grupos = obterGruposParaImpressao();
-    const selecionados = Array.from(document.querySelectorAll(".checkbox-tabela-impressao"))
-        .filter(check => check.checked)
-        .map(check => grupos[Number(check.dataset.index)])
-        .filter(Boolean);
-
-    if (!selecionados.length) {
-        alert("Selecione pelo menos uma tabela para imprimir.");
-        return;
-    }
-
-    const blocos = selecionados.map(item => {
-        const tabela = item.tabela.cloneNode(true);
-
-        tabela.querySelectorAll("button, input, select, .torcida-buttons, .btn-torcida").forEach(el => el.remove());
-
-        const classificados = Array.from(item.tabela.querySelectorAll("tbody tr.classificado"))
-            .map(tr => tr.children[1]?.textContent?.trim())
-            .filter(Boolean);
-
-        const classificadosHtml = classificados.length
-            ? `<div class="classificados-impressao">
-                    <strong>🏆 Times classificados</strong>
-                    <div>${classificados.join(" • ")}</div>
-               </div>`
-            : "";
-
-        return `
-            <section class="bloco-impressao">
-                <h2>${item.nome}</h2>
-                ${tabela.outerHTML}
-                ${classificadosHtml}
-            </section>
-        `;
-    }).join("");
-
-    const janela = window.open("", "_blank", "width=1100,height=800");
-
-    if (!janela) {
-        alert("O navegador bloqueou a janela de impressão. Permita pop-ups para este site.");
-        return;
-    }
-
-    janela.document.open();
-    janela.document.write(`<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Interclasse de Vôlei 2026 - Tabelas</title>
-<style>
-@page { margin: 12mm; }
-* { box-sizing: border-box; }
-body { font-family: Arial, sans-serif; color: #111; margin: 0; }
-h1 { text-align: center; margin: 0 0 26px; }
-.bloco-impressao { page-break-inside: avoid; break-inside: avoid; margin-bottom: 32px; }
-.bloco-impressao h2 { margin: 0 0 10px; padding-bottom: 7px; border-bottom: 2px solid #222; font-size: 21px; }
-table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #777; padding: 7px 8px; text-align: center; }
-th { background: #eee !important; color: #111 !important; }
-td:nth-child(2) { text-align: left; font-weight: 600; }
-.classificados-impressao { margin-top: 10px; padding: 9px 11px; border: 1px solid #777; }
-.classificados-impressao strong { display: block; margin-bottom: 4px; }
-button, input, select, .torcida-buttons { display: none !important; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campeonato de Futebol - Pontos Corridos</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pitch: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d'
+                        },
+                        navy: {
+                            800: '#0f172a',
+                            900: '#0b1120',
+                            950: '#050811'
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .card-glow {
+            transition: all 0.3s ease;
+        }
+        .card-glow:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -10px rgba(34, 197, 94, 0.3);
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
 </head>
-<body>
-<h1>🏐 Interclasse de Vôlei 2026</h1>
-${blocos}
-</body>
-</html>`);
-    janela.document.close();
+<body class="bg-navy-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-pitch-500 selection:text-navy-950">
 
-    setTimeout(() => {
-        janela.focus();
-        janela.print();
-    }, 300);
-}
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="bg-navy-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-pitch-600 to-gold-400 flex items-center justify-center text-navy-950 shadow-lg shadow-pitch-600/20">
+                        <i class="fa-solid fa-trophy text-xl sm:text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-2">
+                            LIGA INTERCLASSE <span class="bg-pitch-500 text-navy-950 text-xs px-2 py-0.5 rounded font-black tracking-widest">2026</span>
+                        </h1>
+                        <p class="text-xs text-slate-400 hidden sm:block">Futebol • Estilo Brasileirão (Pontos Corridos)</p>
+                    </div>
+                </div>
 
-window.abrirImpressaoTabelas = abrirImpressaoTabelas;
+                <!-- Desktop Navigation Buttons -->
+                <nav class="hidden md:flex items-center gap-2">
+                    <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-white bg-slate-800 border border-slate-700">
+                        <i class="fa-solid fa-house text-pitch-500"></i> Início
+                    </button>
+                    <button onclick="switchTab('manha')" id="nav-manha" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-sun text-amber-400"></i> Manhã (7 Times)
+                    </button>
+                    <button onclick="switchTab('tarde')" id="nav-tarde" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-cloud-sun text-orange-400"></i> Tarde (5 Times)
+                    </button>
+                    <button onclick="switchTab('artilharia')" id="nav-artilharia" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-futbol text-gold-400"></i> Artilharia
+                    </button>
+                    <button onclick="switchTab('gestao')" id="nav-gestao" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-users-gear text-blue-400"></i> Times & Elencos
+                    </button>
+                </nav>
 
-document.addEventListener("click", event => {
-    const alvo = event.target.closest?.(".checkbox-tabela-impressao");
-    if (alvo) atualizarContadorImpressao();
-});
+                <!-- Status Badge -->
+                <div class="flex items-center gap-3">
+                    <div id="db-status-badge" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="db-status-text">Sincronizando...</span>
+                    </div>
 
-// =========================================================
-// INICIAR SISTEMA
-// =========================================================
-
-criarInterface();
-iniciarFirebase();
-
-</script>
-
-<!-- Modal de seleção de tabelas para impressão -->
-<div id="modalImpressaoTabelas" class="modal-impressao-tabelas" aria-hidden="true">
-    <div class="modal-impressao-overlay" id="fecharModalImpressaoOverlay"></div>
-    <div class="modal-impressao-conteudo" role="dialog" aria-modal="true" aria-labelledby="tituloModalImpressao">
-        <div class="modal-impressao-cabecalho">
-            <div>
-                <h2 id="tituloModalImpressao">🖨️ Imprimir tabelas</h2>
-                <p>Escolha os grupos que deseja imprimir.</p>
+                    <!-- Reset Button -->
+                    <button onclick="confirmReset()" title="Zerar Banco de Dados" class="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-sm">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
             </div>
-            <button type="button" class="btn-fechar-modal-impressao" id="fecharModalImpressao" aria-label="Fechar">×</button>
         </div>
-        <div class="acoes-modal-impressao">
-            <button type="button" id="selecionarTodasTabelas">☑️ Selecionar todas</button>
-            <button type="button" id="limparSelecaoTabelas">⬜ Limpar seleção</button>
+
+        <!-- Mobile Bottom Nav Bar -->
+        <div class="md:hidden flex items-center justify-around border-t border-slate-800 bg-navy-900 px-2 py-2">
+            <button onclick="switchTab('home')" id="mob-nav-home" class="flex flex-col items-center gap-1 text-xs text-pitch-500 font-bold">
+                <i class="fa-solid fa-house text-base"></i> Início
+            </button>
+            <button onclick="switchTab('manha')" id="mob-nav-manha" class="flex flex-col items-center gap-1 text-xs text-slate-400">
+                <i class="fa-solid fa-sun text-base text-amber-400"></i> Manhã
+            </button>
+            <button onclick="switchTab('tarde')" id="mob-nav-tarde" class="flex flex-col items-center gap-1 text-xs text-slate-400">
+                <i class="fa-solid fa-cloud-sun text-base text-orange-400"></i> Tarde
+            </button>
+            <button onclick="switchTab('artilharia')" id="mob-nav-artilharia" class="flex flex-col items-center gap-1 text-xs text-slate-400">
+                <i class="fa-solid fa-futbol text-base text-gold-400"></i> Artilheiros
+            </button>
+            <button onclick="switchTab('gestao')" id="mob-nav-gestao" class="flex flex-col items-center gap-1 text-xs text-slate-400">
+                <i class="fa-solid fa-users-gear text-base text-blue-400"></i> Elencos
+            </button>
         </div>
-        <div id="listaTabelasImpressao" class="lista-tabelas-impressao"></div>
-        <div class="rodape-modal-impressao">
-            <span id="contadorTabelasSelecionadas">0 tabelas selecionadas</span>
-            <div class="rodape-modal-impressao-acoes">
-                <button type="button" id="cancelarModalImpressao">Cancelar</button>
-                <button type="button" id="btnImprimirSelecionadas" disabled>🖨️ Imprimir selecionadas</button>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- ================= PAGE: HOME ================= -->
+        <section id="page-home" class="space-y-8">
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-900 via-slate-900 to-pitch-900/60 p-6 sm:p-10 border border-slate-800 shadow-2xl">
+                <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none text-pitch-500">
+                    <i class="fa-solid fa-futbol text-[220px]"></i>
+                </div>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-pitch-500/10 text-pitch-400 border border-pitch-500/20">
+                        <i class="fa-solid fa-[#22c55e] fa-circle-check"></i> Regulamento Brasileirão
+                    </span>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                        Campeonato Interclasse de Futebol 2026
+                    </h2>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        Sistema em pontos corridos (todos contra todos). Vitória vale <strong>3 pontos</strong>, Empate vale <strong>1 ponto</strong> e Derrota <strong>0 pontos</strong>.
+                    </p>
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <button onclick="switchTab('manha')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-navy-950 font-bold hover:brightness-110 transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-sun text-navy-950"></i> Ver Tabela da Manhã
+                        </button>
+                        <button onclick="switchTab('tarde')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:brightness-110 transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-sun"></i> Ver Tabela da Tarde
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARDS DA MANHÃ E TARDE -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- CARD MANHÃ -->
+                <div onclick="switchTab('manha')" class="card-glow cursor-pointer bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-800 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-2">
+                                <i class="fa-solid fa-sun"></i> PERÍODO MANHÃ
+                            </span>
+                            <span class="text-xs text-slate-400 font-semibold">7 Equipes</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Torneio da Manhã</h3>
+                        <p class="text-slate-400 text-sm mb-6">Registo de placares, classificação em tempo real e lista de rodadas completas do turno único.</p>
+                        
+                        <!-- Lista mini de times -->
+                        <div class="flex flex-wrap gap-1.5 mb-6" id="home-manha-teams">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-800 text-amber-400 font-bold text-sm group-hover:translate-x-1 transition-transform">
+                        <span>Acessar Rodadas & Placares</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- CARD TARDE -->
+                <div onclick="switchTab('tarde')" class="card-glow cursor-pointer bg-navy-900 rounded-2xl p-6 sm:p-8 border border-slate-800 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-lg text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-sun"></i> PERÍODO TARDE
+                            </span>
+                            <span class="text-xs text-slate-400 font-semibold">5 Equipes</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Torneio da Tarde</h3>
+                        <p class="text-slate-400 text-sm mb-6">Registo de placares, classificação em tempo real e lista de rodadas completas do turno único.</p>
+
+                        <!-- Lista mini de times -->
+                        <div class="flex flex-wrap gap-1.5 mb-6" id="home-tarde-teams">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-800 text-orange-400 font-bold text-sm group-hover:translate-x-1 transition-transform">
+                        <span>Acessar Rodadas & Placares</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Access Grid / Stats Overview -->
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div onclick="switchTab('artilharia')" class="cursor-pointer bg-navy-900 p-5 rounded-xl border border-slate-800 flex items-center gap-4 hover:border-gold-500/40 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-gold-500/10 text-gold-400 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-futbol"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold text-sm">Tabela de Artilharia</h4>
+                        <p class="text-xs text-slate-400" id="home-stat-artilheiro">Artilheiro: Carregando...</p>
+                    </div>
+                </div>
+
+                <div onclick="switchTab('gestao')" class="cursor-pointer bg-navy-900 p-5 rounded-xl border border-slate-800 flex items-center gap-4 hover:border-blue-500/40 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold text-sm">Gestão de Elencos</h4>
+                        <p class="text-xs text-slate-400" id="home-stat-jogadores">Gerenciar atletas e elencos</p>
+                    </div>
+                </div>
+
+                <div class="bg-navy-900 p-5 rounded-xl border border-slate-800 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-pitch-500/10 text-pitch-400 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold text-sm">Critérios Desempate</h4>
+                        <p class="text-xs text-slate-400">1º PTS | 2º SG | 3º GP | 4º V</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE: MANHÃ / TARDE (CAMPEONATO) ================= -->
+        <section id="page-championship" class="hidden space-y-8">
+            <!-- Dynamic Period Header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-navy-900 p-6 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-4">
+                    <div id="champ-period-icon" class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl font-bold border border-amber-500/20">
+                        <i class="fa-solid fa-sun"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="champ-period-tag" class="text-xs font-bold uppercase tracking-wider text-amber-400">Manhã</span>
+                            <span class="text-slate-500">•</span>
+                            <span id="champ-teams-count" class="text-xs text-slate-400">7 Equipes</span>
+                        </div>
+                        <h2 id="champ-title" class="text-2xl sm:text-3xl font-extrabold text-white">Campeonato da Manhã</h2>
+                    </div>
+                </div>
+
+                <!-- Tabs Internal (Classificação x Jogos) -->
+                <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 w-full sm:w-auto">
+                    <button onclick="switchChampSubTab('tabela')" id="subtab-tabela" class="flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white shadow">
+                        <i class="fa-solid fa-list-ol mr-1.5"></i> Tabela
+                    </button>
+                    <button onclick="switchChampSubTab('jogos')" id="subtab-jogos" class="flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-calendar-days mr-1.5"></i> Jogos & Placares
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 1: TABELA DE CLASSIFICAÇÃO -->
+            <div id="champ-view-tabela" class="space-y-6">
+                <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                    <div class="p-4 sm:p-6 border-b border-slate-800 flex items-center justify-between">
+                        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                            <i class="fa-solid fa-table text-pitch-500"></i> Classificação Oficial
+                        </h3>
+                        <span class="text-xs text-slate-400">Atualizado em tempo real</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm">
+                            <thead class="bg-slate-950/80 uppercase text-[11px] tracking-wider text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="py-3.5 px-3 sm:px-4 text-center w-12">Pos</th>
+                                    <th class="py-3.5 px-4">Equipe</th>
+                                    <th class="py-3.5 px-3 text-center font-bold text-white bg-slate-900/60">PTS</th>
+                                    <th class="py-3.5 px-3 text-center">J</th>
+                                    <th class="py-3.5 px-3 text-center text-emerald-400">V</th>
+                                    <th class="py-3.5 px-3 text-center text-amber-400">E</th>
+                                    <th class="py-3.5 px-3 text-center text-red-400">D</th>
+                                    <th class="py-3.5 px-3 text-center">GP</th>
+                                    <th class="py-3.5 px-3 text-center">GC</th>
+                                    <th class="py-3.5 px-3 text-center font-semibold">SG</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-standings-body" class="divide-y divide-slate-800/60 font-medium">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Table Footer / Legend -->
+                    <div class="p-4 bg-slate-950/40 border-t border-slate-800 text-xs text-slate-400 flex flex-wrap gap-4 items-center justify-between">
+                        <div class="flex flex-wrap gap-3">
+                            <span><strong class="text-slate-200">PTS:</strong> Pontos</span>
+                            <span><strong class="text-slate-200">J:</strong> Jogos</span>
+                            <span><strong class="text-slate-200">V:</strong> Vitórias</span>
+                            <span><strong class="text-slate-200">E:</strong> Empates</span>
+                            <span><strong class="text-slate-200">D:</strong> Derrotas</span>
+                            <span><strong class="text-slate-200">GP:</strong> Gols Pró</span>
+                            <span><strong class="text-slate-200">GC:</strong> Gols Sofrenos</span>
+                            <span><strong class="text-slate-200">SG:</strong> Saldo de Gols</span>
+                        </div>
+                        <div class="text-emerald-400 font-semibold flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> 1º Lugar = Campeão
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 2: REGISTRO DE JOGOS E RODADAS -->
+            <div id="champ-view-jogos" class="hidden space-y-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-gold-400"></i> Rodadas da Competição (Turno Único)
+                    </h3>
+                    <span class="text-xs text-slate-400">Preencha o placar e clique em Salvar</span>
+                </div>
+
+                <!-- Match List Accordion / Containers -->
+                <div id="matches-container" class="space-y-6">
+                    <!-- Dynamic Matches per Round -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE: ARTILHARIA ================= -->
+        <section id="page-artilharia" class="hidden space-y-6">
+            <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-futbol text-gold-400"></i> Tabela de Artilharia
+                    </h2>
+                    <p class="text-slate-400 text-sm">Ranking de gols marcados pelos atletas no campeonato</p>
+                </div>
+
+                <!-- Filter Period -->
+                <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                    <button onclick="renderArtilharia('todos')" id="filter-art-todos" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white">Todos</button>
+                    <button onclick="renderArtilharia('manha')" id="filter-art-manha" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">Manhã</button>
+                    <button onclick="renderArtilharia('tarde')" id="filter-art-tarde" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">Tarde</button>
+                </div>
+            </div>
+
+            <!-- Top 3 Podium / Cards -->
+            <div id="artilharia-podium" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Complete List -->
+            <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm">
+                    Lista Geral de Goladores
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-950 uppercase text-[11px] tracking-wider text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="py-3 px-4 text-center w-12">#</th>
+                                <th class="py-3 px-4">Jogador</th>
+                                <th class="py-3 px-4">Equipe</th>
+                                <th class="py-3 px-4">Período</th>
+                                <th class="py-3 px-4 text-center font-bold text-gold-400">Gols</th>
+                                <th class="py-3 px-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="artilharia-table-body" class="divide-y divide-slate-800/60 font-medium">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= PAGE: GESTÃO DE TIMES E JOGADORES ================= -->
+        <section id="page-gestao" class="hidden space-y-6">
+            <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-users-gear text-blue-400"></i> Cadastro & Edição de Times e Elencos
+                </h2>
+                <p class="text-slate-400 text-sm">Altere o nome das equipes e adicione atletas para registrar a autoria dos gols durante os jogos.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Coluna 1: Formulário Novo Jogador -->
+                <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800 space-y-4 h-fit">
+                    <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-pitch-500"></i> Cadastrar Jogador
+                    </h3>
+                    
+                    <form onsubmit="handleAddPlayer(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Período</label>
+                            <select id="new-player-period" onchange="updateTeamDropdown()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-pitch-500">
+                                <option value="manha">🌅 Manhã</option>
+                                <option value="tarde">🌇 Tarde</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Time</label>
+                            <select id="new-player-team" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-pitch-500">
+                                <!-- Options injected JS -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Nome do Jogador</label>
+                            <input type="text" id="new-player-name" required placeholder="Ex: Gabriel Jesus" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-pitch-500">
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-pitch-600 hover:bg-pitch-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-pitch-600/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Adicionar ao Elenco
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Coluna 2 e 3: Listagem de Elencos por Período -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Switch Period Elencos -->
+                    <div class="flex items-center justify-between bg-navy-900 p-4 rounded-xl border border-slate-800">
+                        <span class="text-sm font-bold text-white">Visualizar Elencos:</span>
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                            <button onclick="renderElencos('manha')" id="btn-elenco-manha" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-500 text-navy-950">🌅 Manhã</button>
+                            <button onclick="renderElencos('tarde')" id="btn-elenco-tarde" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">🌇 Tarde</button>
+                        </div>
+                    </div>
+
+                    <!-- Teams Accordion/Cards Container -->
+                    <div id="elencos-teams-container" class="grid sm:grid-cols-2 gap-4">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-navy-900 border-t border-slate-800 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Liga Interclasse de Futebol 2026 • Sistema de Pontos Corridos & Realtime Sync</p>
+        </div>
+    </footer>
+
+
+    <!-- MODAL: DETALHES DOS GOLS E ARTILHEIROS DA PARTIDA -->
+    <div id="modal-match-goals" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-navy-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-futbol text-gold-400"></i> Registrar Autores dos Gols
+                </h3>
+                <button onclick="closeGoalsModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 flex-grow" id="modal-match-goals-content">
+                <!-- Injected JS -->
+            </div>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-end gap-3">
+                <button onclick="closeGoalsModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800">
+                    Concluir / Fechar
+                </button>
             </div>
         </div>
     </div>
-</div>
 
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const fechar = () => fecharModalImpressao();
-    document.getElementById("fecharModalImpressao")?.addEventListener("click", fechar);
-    document.getElementById("cancelarModalImpressao")?.addEventListener("click", fechar);
-    document.getElementById("fecharModalImpressaoOverlay")?.addEventListener("click", fechar);
-    document.getElementById("selecionarTodasTabelas")?.addEventListener("click", function () {
-        document.querySelectorAll(".checkbox-tabela-impressao").forEach(c => c.checked = true);
-        atualizarContadorImpressao();
-    });
-    document.getElementById("limparSelecaoTabelas")?.addEventListener("click", function () {
-        document.querySelectorAll(".checkbox-tabela-impressao").forEach(c => c.checked = false);
-        atualizarContadorImpressao();
-    });
-    document.getElementById("btnImprimirSelecionadas")?.addEventListener("click", imprimirTabelasSelecionadas);
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") fecharModalImpressao();
-    });
-});
-</script>
+    <!-- ================= FIREBASE COMPAT SDK ================= -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
+    <!-- MAIN APP JAVASCRIPT -->
+    <script>
+        // =========================================================
+        // CONFIGURAÇÃO DO FIREBASE (COM FALLBACK LOCAL SE FORA DO AR)
+        // =========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPmyf4FhiPC-HNw_maPv1VRIaGTzHpFEc",
+            authDomain: "interclassequeimada.firebaseapp.com",
+            projectId: "interclassequeimada",
+            storageBucket: "interclassequeimada.firebasestorage.app",
+            messagingSenderId: "366267653198",
+            databaseURL: "https://interclassequeimada-default-rtdb.firebaseio.com",
+            appId: "1:366267653198:web:650743ca118bc8c239771f"
+        };
+
+        let db = null;
+        let rootRef = null;
+        let isFirebaseOnline = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            rootRef = db.ref("futebol_2026");
+        } catch(e) {
+            console.warn("Firebase fallback:", e);
+        }
+
+        // =========================================================
+        // ESTADO INICIAL DOS TIMES & ESTRUTURA
+        // =========================================================
+        const DEFAULT_TEAMS = {
+            manha: [
+                "Garras Noturnas",
+                "Imperadores do Gelo",
+                "Guardas de Ferro",
+                "Ventos Celestes",
+                "Presas Prateadas",
+                "Dragões Celestiais",
+                "Plumas Reais"
+            ],
+            tarde: [
+                "Fúrias do Norte",
+                "Gigantes da Ilha",
+                "Reis Implacáveis",
+                "Garras de Neve",
+                "Lanças do Mar"
+            ]
+        };
+
+        // Estado Global da Aplicação
+        let appData = {
+            teams: {
+                manha: [
+                    "Garras Noturnas",
+                    "Imperadores do Gelo",
+                    "Guardas de Ferro",
+                    "Ventos Celestes",
+                    "Presas Prateadas",
+                    "Dragões Celestiais",
+                    "Plumas Reais"
+                ],
+                tarde: [
+                    "Fúrias do Norte",
+                    "Gigantes da Ilha",
+                    "Reis Implacáveis",
+                    "Garras de Neve",
+                    "Lanças do Mar"
+                ]
+            },
+            jogos: {
+                manha: {},
+                tarde: {}
+            },
+            jogadores: {
+                // id: { id, nome, time, periodo, gols }
+            }
+        };
+
+        let currentPeriod = 'manha'; // 'manha' ou 'tarde'
+        function getTeams(period) {
+            return (appData.teams && appData.teams[period]) ? appData.teams[period] : DEFAULT_TEAMS[period];
+        }
+
+        // =========================================================
+        // ALGORITMO ROUND-ROBIN (GERADOR DE RODADAS TURNO ÚNICO)
+        // =========================================================
+        function generateRoundRobin(teamsList) {
+            let teams = [...teamsList];
+            let isOdd = teams.length % 2 !== 0;
+            if (isOdd) {
+                teams.push("FOLGA"); // Bye team for odd number
+            }
+
+            let numRounds = teams.length - 1;
+            let halfSize = teams.length / 2;
+            let rounds = [];
+
+            for (let round = 0; round < numRounds; round++) {
+                let matches = [];
+                for (let i = 0; i < halfSize; i++) {
+                    let teamA = teams[i];
+                    let teamB = teams[teams.length - 1 - i];
+
+                    if (teamA !== "FOLGA" && teamB !== "FOLGA") {
+                        matches.push({ team1: teamA, team2: teamB });
+                    }
+                }
+                rounds.push(matches);
+
+                // Rotate teams array leaving first index fixed
+                teams.splice(1, 0, teams.pop());
+            }
+
+            return rounds;
+        }
+
+        // Pre-calcular rodadas da Manhã e Tarde
+        const RODADAS = {
+            manha: generateRoundRobin(DEFAULT_TEAMS.manha),
+            tarde: generateRoundRobin(DEFAULT_TEAMS.tarde)
+        };
+
+        // =========================================================
+        // FIREBASE OBSERVER & INIT
+        // =========================================================
+        window.onload = function() {
+            initFirebaseListener();
+            populateHomeTeamBadges();
+            updateTeamDropdown();
+        };
+
+        function initFirebaseListener() {
+            const statusBadge = document.getElementById("db-status-badge");
+            const statusText = document.getElementById("db-status-text");
+
+            if (!rootRef) {
+                if (statusText) statusText.textContent = "Modo Local (Offline)";
+                renderAllViews();
+                return;
+            }
+
+            rootRef.on('value', (snapshot) => {
+                isFirebaseOnline = true;
+                if (statusText) statusText.textContent = "Conectado Realtime";
+                if (statusBadge) statusBadge.classList.remove('hidden');
+
+                const val = snapshot.val();
+                if (val) {
+                    appData = {
+                        teams: val.teams || JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+                        jogos: val.jogos || { manha: {}, tarde: {} },
+                        jogadores: val.jogadores || {}
+                    };
+                } else {
+                    // Seed initial data if database is empty
+                    appData.teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
+                    saveStateToFirebase();
+                }
+                populateHomeTeamBadges();
+                renderAllViews();
+            }, (error) => {
+                console.error("Firebase error:", error);
+                if (statusText) statusText.textContent = "Modo Local";
+                renderAllViews();
+            });
+        }
+
+        function saveStateToFirebase() {
+            if (rootRef && isFirebaseOnline) {
+                rootRef.set(appData);
+            }
+        }
+
+        // =========================================================
+        // NAVEGAÇÃO ENTRE ABAS
+        // =========================================================
+        function switchTab(tabId) {
+            // Hide all pages
+            ['home', 'championship', 'artilharia', 'gestao'].forEach(p => {
+                document.getElementById(`page-${p}`).classList.add('hidden');
+            });
+
+            // Reset Nav Styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2";
+            });
+
+            if (tabId === 'home') {
+                document.getElementById('page-home').classList.remove('hidden');
+                document.getElementById('nav-home').className = "nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white bg-slate-800 border border-slate-700 flex items-center gap-2";
+                updateHomeStats();
+            } else if (tabId === 'manha' || tabId === 'tarde') {
+                currentPeriod = tabId;
+                document.getElementById('page-championship').classList.remove('hidden');
+                document.getElementById(`nav-${tabId}`).className = "nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white bg-slate-800 border border-slate-700 flex items-center gap-2";
+                renderChampionshipHeader();
+                renderChampionshipView();
+            } else if (tabId === 'artilharia') {
+                document.getElementById('page-artilharia').classList.remove('hidden');
+                document.getElementById('nav-artilharia').className = "nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white bg-slate-800 border border-slate-700 flex items-center gap-2";
+                renderArtilharia(currentArtilhariaFilter);
+            } else if (tabId === 'gestao') {
+                document.getElementById('page-gestao').classList.remove('hidden');
+                document.getElementById('nav-gestao').className = "nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-white bg-slate-800 border border-slate-700 flex items-center gap-2";
+                updateTeamDropdown();
+                renderElencos(currentElencoPeriod);
+            }
+        }
+
+        function switchChampSubTab(sub) {
+            currentSubTab = sub;
+            const btnTab = document.getElementById('subtab-tabela');
+            const btnJogos = document.getElementById('subtab-jogos');
+            const viewTab = document.getElementById('champ-view-tabela');
+            const viewJogos = document.getElementById('champ-view-jogos');
+
+            if (sub === 'tabela') {
+                btnTab.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white shadow";
+                btnJogos.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+                viewTab.classList.remove('hidden');
+                viewJogos.classList.add('hidden');
+                renderStandingsTable();
+            } else {
+                btnJogos.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white shadow";
+                btnTab.className = "flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+                viewJogos.classList.remove('hidden');
+                viewTab.classList.add('hidden');
+                renderMatchesView();
+            }
+        }
+
+        function renderAllViews() {
+            updateHomeStats();
+            if (!document.getElementById('page-championship').classList.contains('hidden')) {
+                renderChampionshipHeader();
+                renderChampionshipView();
+            }
+            if (!document.getElementById('page-artilharia').classList.contains('hidden')) {
+                renderArtilharia(currentArtilhariaFilter);
+            }
+            if (!document.getElementById('page-gestao').classList.contains('hidden')) {
+                renderElencos(currentElencoPeriod);
+            }
+        }
+
+        // =========================================================
+        // HOME PAGE RENDERING
+        // =========================================================
+        function populateHomeTeamBadges() {
+            const manhaContainer = document.getElementById('home-manha-teams');
+            const tardeContainer = document.getElementById('home-tarde-teams');
+            const manhaTeams = getTeams('manha');
+            const tardeTeams = getTeams('tarde');
+
+            manhaContainer.innerHTML = manhaTeams.map(t => 
+                `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60">${t}</span>`
+            ).join('');
+
+            tardeContainer.innerHTML = tardeTeams.map(t => 
+                `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60">${t}</span>`
+            ).join('');
+        }
+
+        function updateHomeStats() {
+            const topScorer = getTopScorer();
+            const elScorer = document.getElementById('home-stat-artilheiro');
+            if (topScorer && topScorer.gols > 0) {
+                elScorer.innerHTML = `<strong class="text-gold-400">${topScorer.nome}</strong> (${topScorer.team}) - ${topScorer.gols} gols`;
+            } else {
+                elScorer.textContent = "Nenhum gol registrado ainda";
+            }
+
+            const totalPlayers = Object.keys(appData.jogadores || {}).length;
+            document.getElementById('home-stat-jogadores').textContent = `${totalPlayers} atletas cadastrados nos elencos`;
+        }
+
+        // =========================================================
+        // CAMPEONATO (MANHÃ / TARDE) HEADER & LOGIC
+        // =========================================================
+        function renderChampionshipHeader() {
+            const isManha = currentPeriod === 'manha';
+            const icon = document.getElementById('champ-period-icon');
+            const tag = document.getElementById('champ-period-tag');
+            const count = document.getElementById('champ-teams-count');
+            const title = document.getElementById('champ-title');
+
+            if (isManha) {
+                icon.className = "w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl font-bold border border-amber-500/20";
+                icon.innerHTML = `<i class="fa-solid fa-sun"></i>`;
+                tag.className = "text-xs font-bold uppercase tracking-wider text-amber-400";
+                tag.textContent = "Período Manhã";
+                count.textContent = "7 Equipes • 21 Jogos Total";
+                title.textContent = "Torneio da Manhã";
+            } else {
+                icon.className = "w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-400 flex items-center justify-center text-2xl font-bold border border-orange-500/20";
+                icon.innerHTML = `<i class="fa-solid fa-cloud-sun"></i>`;
+                tag.className = "text-xs font-bold uppercase tracking-wider text-orange-400";
+                tag.textContent = "Período Tarde";
+                count.textContent = "5 Equipes • 10 Jogos Total";
+                title.textContent = "Torneio da Tarde";
+            }
+        }
+
+        function renderChampionshipView() {
+            if (currentSubTab === 'tabela') {
+                renderStandingsTable();
+            } else {
+                renderMatchesView();
+            }
+        }
+
+        // =========================================================
+        // CÁLCULO DE PONTOS CORRIDOS (REGRA BRASILEIRÃO)
+        // =========================================================
+        function calculateStandings(period) {
+            const teams = getTeams(period);
+            const games = appData.jogos[period] || {};
+
+            let stats = {};
+            teams.forEach(team => {
+                stats[team] = {
+                    nome: team,
+                    pts: 0,
+                    j: 0,
+                    v: 0,
+                    e: 0,
+                    d: 0,
+                    gp: 0,
+                    gc: 0,
+                    sg: 0
+                };
+            });
+
+            Object.values(games).forEach(game => {
+                if (game && game.gols1 !== undefined && game.gols2 !== undefined && game.gols1 !== "" && game.gols2 !== "") {
+                    const g1 = parseInt(game.gols1);
+                    const g2 = parseInt(game.gols2);
+                    const t1 = game.team1;
+                    const t2 = game.team2;
+
+                    if (stats[t1] && stats[t2]) {
+                        stats[t1].j++;
+                        stats[t2].j++;
+                        stats[t1].gp += g1;
+                        stats[t1].gc += g2;
+                        stats[t2].gp += g2;
+                        stats[t2].gc += g1;
+
+                        if (g1 > g2) {
+                            // Vitória T1
+                            stats[t1].pts += 3;
+                            stats[t1].v++;
+                            stats[t2].d++;
+                        } else if (g2 > g1) {
+                            // Vitória T2
+                            stats[t2].pts += 3;
+                            stats[t2].v++;
+                            stats[t1].d++;
+                        } else {
+                            // Empate
+                            stats[t1].pts += 1;
+                            stats[t2].pts += 1;
+                            stats[t1].e++;
+                            stats[t2].e++;
+                        }
+                    }
+                }
+            });
+
+            // Calculate SG
+            Object.keys(stats).forEach(t => {
+                stats[t].sg = stats[t].gp - stats[t].gc;
+            });
+
+            // SORTING / TIE-BREAKERS: 1º PTS | 2º SG | 3º GP | 4º V
+            const leaderboard = Object.values(stats).sort((a, b) => {
+                if (b.pts !== a.pts) return b.pts - a.pts;
+                if (b.sg !== a.sg) return b.sg - a.sg;
+                if (b.gp !== a.gp) return b.gp - a.gp;
+                if (b.v !== a.v) return b.v - a.v;
+                return a.nome.localeCompare(b.nome);
+            });
+
+            return leaderboard;
+        }
+
+        function renderStandingsTable() {
+            const body = document.getElementById('table-standings-body');
+            const standings = calculateStandings(currentPeriod);
+
+            body.innerHTML = standings.map((item, idx) => {
+                const pos = idx + 1;
+                let posBadge = `<span class="font-bold text-slate-400">${pos}º</span>`;
+                let rowBg = "hover:bg-slate-800/40 transition-colors";
+
+                if (pos === 1) {
+                    posBadge = `<span class="w-6 h-6 rounded-full bg-gold-500 text-navy-950 font-black flex items-center justify-center text-xs shadow-md shadow-gold-500/20">1</span>`;
+                    rowBg += " bg-pitch-500/5";
+                } else if (pos === 2) {
+                    posBadge = `<span class="w-6 h-6 rounded-full bg-slate-300 text-navy-950 font-black flex items-center justify-center text-xs">2</span>`;
+                } else if (pos === 3) {
+                    posBadge = `<span class="w-6 h-6 rounded-full bg-amber-700 text-white font-black flex items-center justify-center text-xs">3</span>`;
+                }
+
+                const sgFormatted = item.sg > 0 ? `+${item.sg}` : item.sg;
+                const sgColor = item.sg > 0 ? "text-emerald-400" : (item.sg < 0 ? "text-red-400" : "text-slate-400");
+
+                return `
+                    <tr class="${rowBg}">
+                        <td class="py-3.5 px-3 sm:px-4 text-center">${posBadge}</td>
+                        <td class="py-3.5 px-4 font-bold text-white">${item.nome}</td>
+                        <td class="py-3.5 px-3 text-center font-black text-pitch-400 text-base bg-slate-900/40">${item.pts}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-300">${item.j}</td>
+                        <td class="py-3.5 px-3 text-center font-semibold text-emerald-400">${item.v}</td>
+                        <td class="py-3.5 px-3 text-center font-semibold text-amber-400">${item.e}</td>
+                        <td class="py-3.5 px-3 text-center font-semibold text-red-400">${item.d}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-300">${item.gp}</td>
+                        <td class="py-3.5 px-3 text-center text-slate-400">${item.gc}</td>
+                        <td class="py-3.5 px-3 text-center font-bold ${sgColor}">${sgFormatted}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // =========================================================
+        // RENDERING DE JOGOS & PLACARES (RODADAS)
+        // =========================================================
+        function renderMatchesView() {
+            const container = document.getElementById('matches-container');
+            const currentTeams = getTeams(currentPeriod);
+            const rounds = generateRoundRobin(currentTeams);
+            const periodGames = appData.jogos[currentPeriod] || {};
+
+            let html = "";
+
+            rounds.forEach((roundMatches, roundIdx) => {
+                const roundNum = roundIdx + 1;
+                html += `
+                    <div class="bg-navy-900 rounded-2xl border border-slate-800 p-5 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-pitch-400 flex items-center gap-2">
+                                <i class="fa-solid fa-flag-checkered"></i> Rodada ${roundNum}
+                            </span>
+                            <span class="text-xs text-slate-500">${roundMatches.length} Partida(s)</span>
+                        </div>
+                        <div class="space-y-3">
+                `;
+
+                roundMatches.forEach(match => {
+                    const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
+                    const savedGame = periodGames[gameId] || {};
+                    const val1 = savedGame.gols1 !== undefined ? savedGame.gols1 : '';
+                    const val2 = savedGame.gols2 !== undefined ? savedGame.gols2 : '';
+
+                    html += `
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <!-- Team 1 -->
+                            <div class="flex items-center justify-end sm:justify-start gap-3 w-full sm:w-5/12 text-right sm:text-left">
+                                <span class="font-bold text-sm text-white">${match.team1}</span>
+                            </div>
+
+                            <!-- Placar Controls -->
+                            <div class="flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <input type="number" min="0" max="99" id="input-${gameId}-1" value="${val1}" placeholder="0" 
+                                    class="w-12 h-11 bg-slate-900 border border-slate-700 rounded-lg text-center font-black text-lg text-white focus:outline-none focus:border-pitch-500">
+                                
+                                <span class="font-bold text-slate-500 text-xs">X</span>
+
+                                <input type="number" min="0" max="99" id="input-${gameId}-2" value="${val2}" placeholder="0" 
+                                    class="w-12 h-11 bg-slate-900 border border-slate-700 rounded-lg text-center font-black text-lg text-white focus:outline-none focus:border-pitch-500">
+                            </div>
+
+                            <!-- Team 2 -->
+                            <div class="flex items-center justify-start sm:justify-end gap-3 w-full sm:w-5/12 text-left sm:text-right">
+                                <span class="font-bold text-sm text-white">${match.team2}</span>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                                <button onclick="saveMatchScore('${match.team1}', '${match.team2}', '${gameId}')" title="Salvar Placar"
+                                    class="px-3 py-2 bg-pitch-600 hover:bg-pitch-500 text-white rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
+                                    <i class="fa-solid fa-check"></i> Salvar
+                                </button>
+                                <button onclick="openGoalsModal('${match.team1}', '${match.team2}', '${gameId}')" title="Atribuir Autores dos Gols"
+                                    class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-gold-400 border border-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                                    <i class="fa-solid fa-futbol"></i> Gols
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // =========================================================
+        // AUXILIARES & SALVAR PLACAR DA PARTIDA
+        // =========================================================
+        let currentSubTab = 'tabela';
+        let currentArtilhariaFilter = 'todos';
+        let currentElencoPeriod = 'manha';
+
+        function slugify(text) {
+            return text
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        function saveMatchScore(team1, team2, gameId) {
+            const input1 = document.getElementById(`input-${gameId}-1`);
+            const input2 = document.getElementById(`input-${gameId}-2`);
+
+            if (!input1 || !input2) return;
+
+            const val1 = input1.value.trim();
+            const val2 = input2.value.trim();
+
+            if (!appData.jogos) appData.jogos = { manha: {}, tarde: {} };
+            if (!appData.jogos[currentPeriod]) appData.jogos[currentPeriod] = {};
+
+            if (val1 === '' && val2 === '') {
+                delete appData.jogos[currentPeriod][gameId];
+            } else {
+                appData.jogos[currentPeriod][gameId] = {
+                    team1,
+                    team2,
+                    gols1: val1 !== '' ? parseInt(val1) : 0,
+                    gols2: val2 !== '' ? parseInt(val2) : 0
+                };
+            }
+
+            saveStateToFirebase();
+            renderAllViews();
+        }
+
+        // =========================================================
+        // ARTILHARIA & MODAL DE GOLS
+        // =========================================================
+        function getTopScorer() {
+            const players = Object.values(appData.jogadores || {});
+            if (players.length === 0) return null;
+
+            const sorted = [...players].sort((a, b) => (b.gols || 0) - (a.gols || 0));
+            return sorted[0];
+        }
+
+        function renderArtilharia(filter = 'todos') {
+            currentArtilhariaFilter = filter;
+            const filterBtns = ['todos', 'manha', 'tarde'];
+            filterBtns.forEach(f => {
+                const btn = document.getElementById(`filter-art-${f}`);
+                if (btn) {
+                    if (f === filter) {
+                        btn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white";
+                    } else {
+                        btn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+                    }
+                }
+            });
+
+            let players = Object.values(appData.jogadores || {});
+            if (filter !== 'todos') {
+                players = players.filter(p => p.periodo === filter);
+            }
+
+            players.sort((a, b) => (b.gols || 0) - (a.gols || 0));
+
+            const podiumContainer = document.getElementById('artilharia-podium');
+            const tableBody = document.getElementById('artilharia-table-body');
+
+            // Render Podium (Top 3)
+            const top3 = players.slice(0, 3);
+            if (top3.length > 0 && top3[0].gols > 0) {
+                podiumContainer.innerHTML = top3.map((p, idx) => {
+                    const medals = ['🥇 1º Lugar', '🥈 2º Lugar', '🥉 3º Lugar'];
+                    const colors = ['border-gold-500/50 bg-gold-500/10', 'border-slate-400/50 bg-slate-400/10', 'border-amber-700/50 bg-amber-700/10'];
+                    return `
+                        <div class="bg-navy-900 rounded-2xl border ${colors[idx]} p-5 flex flex-col items-center text-center space-y-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-gold-400">${medals[idx]}</span>
+                            <h4 class="font-extrabold text-white text-lg">${p.nome}</h4>
+                            <p class="text-xs text-slate-300">${p.team} (${p.periodo === 'manha' ? 'Manhã' : 'Tarde'})</p>
+                            <span class="px-3 py-1 rounded-full text-xs font-black bg-pitch-500 text-navy-950">${p.gols || 0} Gols</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                podiumContainer.innerHTML = `<div class="col-span-3 text-center py-4 text-xs text-slate-500 italic">Nenhum gol registrado no ranking ainda.</div>`;
+            }
+
+            // Render Table
+            tableBody.innerHTML = players.map((p, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
+                    <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
+                    <td class="py-3 px-4 font-bold text-white">${p.nome}</td>
+                    <td class="py-3 px-4 text-slate-300">${p.team}</td>
+                    <td class="py-3 px-4 text-slate-400 capitalize">${p.periodo}</td>
+                    <td class="py-3 px-4 text-center font-black text-gold-400 text-base">${p.gols || 0}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="addGoalToPlayer('${p.id}', 1)" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded text-xs font-bold mr-1">+1 Gol</button>
+                        <button onclick="addGoalToPlayer('${p.id}', -1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold">-1</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function addGoalToPlayer(playerId, amount) {
+            if (appData.jogadores && appData.jogadores[playerId]) {
+                const current = appData.jogadores[playerId].gols || 0;
+                appData.jogadores[playerId].gols = Math.max(0, current + amount);
+                saveStateToFirebase();
+                renderAllViews();
+            }
+        }
+
+        function openGoalsModal(team1, team2, gameId) {
+            const modal = document.getElementById('modal-match-goals');
+            const content = document.getElementById('modal-match-goals-content');
+
+            const t1Players = getPlayersByTeamAndPeriod(team1, currentPeriod);
+            const t2Players = getPlayersByTeamAndPeriod(team2, currentPeriod);
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-pitch-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
+                            <span>${team1}</span>
+                            <span class="text-xs text-slate-400 font-normal">Clique para adicionar gol</span>
+                        </h4>
+                        ${t1Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                ${t1Players.map(p => `
+                                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                                        <span class="font-bold text-white">${p.nome}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-black text-gold-400">${p.gols || 0} G</span>
+                                            <button onclick="addGoalToPlayer('${p.id}', 1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded font-bold">+1</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-orange-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
+                            <span>${team2}</span>
+                            <span class="text-xs text-slate-400 font-normal">Clique para adicionar gol</span>
+                        </h4>
+                        ${t2Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                ${t2Players.map(p => `
+                                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                                        <span class="font-bold text-white">${p.nome}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-black text-gold-400">${p.gols || 0} G</span>
+                                            <button onclick="addGoalToPlayer('${p.id}', 1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded font-bold">+1</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeGoalsModal() {
+            document.getElementById('modal-match-goals').classList.add('hidden');
+        }
+
+        // =========================================================
+        // GESTÃO DE TIMES E ELENCOS (INCLUINDO RENOMEAR TIME)
+        // =========================================================
+        function updateTeamDropdown() {
+            const period = document.getElementById('new-player-period').value;
+            const select = document.getElementById('new-player-team');
+            const teams = getTeams(period);
+
+            select.innerHTML = teams.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
+        function renameTeam(period, oldName) {
+            const newName = prompt(`Digite o novo nome para o time "${oldName}":`, oldName);
+            if (!newName || newName.trim() === "" || newName.trim() === oldName) return;
+
+            const trimmedNewName = newName.trim();
+
+            if (!appData.teams) appData.teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
+            const teamIndex = appData.teams[period].indexOf(oldName);
+            if (teamIndex !== -1) {
+                appData.teams[period][teamIndex] = trimmedNewName;
+            }
+
+            // Atualizar jogadores vinculados
+            Object.values(appData.jogadores || {}).forEach(p => {
+                if (p.team === oldName && p.periodo === period) {
+                    p.team = trimmedNewName;
+                }
+            });
+
+            // Atualizar registros de jogos já ocorridos
+            if (appData.jogos && appData.jogos[period]) {
+                const updatedGames = {};
+                Object.entries(appData.jogos[period]).forEach(([gameId, game]) => {
+                    const t1 = game.team1 === oldName ? trimmedNewName : game.team1;
+                    const t2 = game.team2 === oldName ? trimmedNewName : game.team2;
+                    const newGameId = `${slugify(t1)}_x_${slugify(t2)}`;
+
+                    updatedGames[newGameId] = {
+                        ...game,
+                        team1: t1,
+                        team2: t2
+                    };
+                });
+                appData.jogos[period] = updatedGames;
+            }
+
+            saveStateToFirebase();
+            populateHomeTeamBadges();
+            updateTeamDropdown();
+            renderAllViews();
+            alert(`Time alterado de "${oldName}" para "${trimmedNewName}" com sucesso!`);
+        }
+
+        function handleAddPlayer(e) {
+            e.preventDefault();
+            const period = document.getElementById('new-player-period').value;
+            const team = document.getElementById('new-player-team').value;
+            const nameInput = document.getElementById('new-player-name');
+            const name = nameInput.value.trim();
+
+            if (!name) return;
+
+            const playerId = `player_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+            if (!appData.jogadores) appData.jogadores = {};
+
+            appData.jogadores[playerId] = {
+                id: playerId,
+                nome: name,
+                team: team,
+                periodo: period,
+                gols: 0
+            };
+
+            saveStateToFirebase();
+            nameInput.value = "";
+            renderElencos(currentElencoPeriod);
+            alert(`Jogador ${name} cadastrado com sucesso no ${team}!`);
+        }
+
+        function removePlayer(playerId) {
+            if (confirm("Deseja realmente remover este jogador?")) {
+                delete appData.jogadores[playerId];
+                saveStateToFirebase();
+                renderAllViews();
+            }
+        }
+
+        function getPlayersByTeamAndPeriod(teamName, period) {
+            return Object.values(appData.jogadores || {}).filter(
+                p => p.team === teamName && p.periodo === period
+            );
+        }
+
+        function renderElencos(period) {
+            currentElencoPeriod = period;
+
+            const btnM = document.getElementById('btn-elenco-manha');
+            const btnT = document.getElementById('btn-elenco-tarde');
+
+            if (period === 'manha') {
+                btnM.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-500 text-navy-950";
+                btnT.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+            } else {
+                btnT.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-orange-500 text-white";
+                btnM.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+            }
+
+            const container = document.getElementById('elencos-teams-container');
+            const teams = getTeams(period);
+
+            container.innerHTML = teams.map(team => {
+                const players = getPlayersByTeamAndPeriod(team, period);
+
+                return `
+                    <div class="bg-navy-900 rounded-2xl border border-slate-800 p-5 space-y-3 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-white text-base">${team}</h4>
+                                    <button onclick="renameTeam('${period}', '${team}')" class="text-slate-400 hover:text-amber-400 p-1 text-xs" title="Editar nome do time">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                </div>
+                                <span class="text-xs text-slate-400 font-semibold">${players.length} Atleta(s)</span>
+                            </div>
+
+                            <div class="pt-3 space-y-1.5">
+                                ${players.length === 0 ? `
+                                    <p class="text-xs text-slate-500 italic">Nenhum atleta cadastrado ainda.</p>
+                                ` : players.map(p => `
+                                    <div class="flex items-center justify-between text-xs py-1 border-b border-slate-800/40">
+                                        <span class="text-slate-200 font-medium">${p.nome}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gold-400 font-bold">${p.gols || 0} Gols</span>
+                                            <button onclick="removePlayer('${p.id}')" class="text-red-400 hover:text-red-300 ml-1">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================================================
+        // ZERAR / RESETAR BANCO DE DADOS
+        // =========================================================
+        function confirmReset() {
+            if (confirm("ATENÇÃO: Deseja apagar todos os placares, partidas e dados de artilharia?")) {
+                appData = {
+                    teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+                    jogos: { manha: {}, tarde: {} },
+                    jogadores: {}
+                };
+                saveStateToFirebase();
+                populateHomeTeamBadges();
+                renderAllViews();
+                alert("O campeonato foi restaurado para o estado inicial!");
+            }
+        }
+    </script>
 </body>
 </html>
