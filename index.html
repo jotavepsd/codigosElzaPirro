@@ -75,6 +75,44 @@
 </head>
 <body class="bg-navy-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-pitch-500 selection:text-navy-950">
 
+    <!-- SCREEN: AUTH MODAL / LOGIN SELECTION (EXIBIDA DE INÍCIO) -->
+    <div id="auth-screen" class="fixed inset-0 z-50 bg-navy-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-navy-900 border border-slate-800 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl text-center space-y-6">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pitch-600 to-gold-400 flex items-center justify-center text-navy-950 text-3xl font-black mx-auto shadow-lg shadow-pitch-600/20">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            
+            <div>
+                <h2 class="text-2xl font-black text-white">LIGA INTERCLASSE 2026</h2>
+                <p class="text-xs text-slate-400 mt-1">Selecione como deseja acessar o painel do campeonato</p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+                <!-- Botão Principal: Visitante -->
+                <button onclick="loginAsGuest()" class="w-full py-4 bg-gradient-to-r from-pitch-600 to-pitch-500 hover:brightness-110 text-white font-extrabold rounded-2xl transition-all shadow-lg shadow-pitch-600/20 flex items-center justify-center gap-3 text-base">
+                    <i class="fa-solid fa-eye text-lg"></i> Entrar como Visitante
+                </button>
+                <p class="text-[11px] text-slate-400">Acesso livre para alunos, pais e torcedores acompanharem as tabelas.</p>
+            </div>
+
+            <!-- Botão Secundário / Link Admin -->
+            <div class="pt-4 border-t border-slate-800">
+                <button onclick="showAdminPasswordInput()" class="text-xs font-bold text-slate-400 hover:text-gold-400 transition-colors flex items-center justify-center gap-1.5 mx-auto">
+                    <i class="fa-solid fa-lock"></i> Sou Administrador (Entrar com Senha)
+                </button>
+
+                <div id="admin-pass-box" class="hidden mt-4 space-y-2">
+                    <input type="password" id="admin-password-input" placeholder="Digite a senha de administrador" 
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-center font-semibold text-white focus:outline-none focus:border-gold-500">
+                    <button onclick="loginAsAdmin()" class="w-full py-2.5 bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs rounded-xl transition-all">
+                        Confirmar Senha
+                    </button>
+                    <p id="admin-pass-error" class="text-[11px] text-red-400 hidden font-semibold">Senha incorreta! Tente novamente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOP HEADER / NAVBAR -->
     <header class="bg-navy-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -111,15 +149,15 @@
                     </button>
                 </nav>
 
-                <!-- Status Badge -->
+                <!-- Status & User Mode Badge -->
                 <div class="flex items-center gap-3">
-                    <div id="db-status-badge" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="db-status-text">Sincronizando...</span>
+                    <div id="user-role-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer" onclick="logoutRole()">
+                        <i id="user-role-icon" class="fa-solid fa-eye text-slate-400"></i>
+                        <span id="user-role-text">Visitante</span>
                     </div>
 
-                    <!-- Reset Button -->
-                    <button onclick="confirmReset()" title="Zerar Banco de Dados" class="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-sm">
+                    <!-- Reset Button (Admin only) -->
+                    <button id="admin-reset-btn" onclick="confirmReset()" title="Zerar Banco de Dados" class="p-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-sm">
                         <i class="fa-solid fa-rotate-left"></i>
                     </button>
                 </div>
@@ -419,8 +457,8 @@
             </div>
 
             <div class="grid lg:grid-cols-3 gap-6">
-                <!-- Coluna 1: Formulário Novo Jogador -->
-                <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800 space-y-4 h-fit">
+                <!-- Coluna 1: Formulário Novo Jogador (Somente Admin) -->
+                <div id="admin-add-player-box" class="bg-navy-900 p-6 rounded-2xl border border-slate-800 space-y-4 h-fit">
                     <h3 class="font-bold text-lg text-white flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-pitch-500"></i> Cadastrar Jogador
                     </h3>
@@ -453,7 +491,7 @@
                 </div>
 
                 <!-- Coluna 2 e 3: Listagem de Elencos por Período -->
-                <div class="lg:col-span-2 space-y-6">
+                <div id="elencos-list-wrapper" class="lg:col-span-2 space-y-6">
                     <!-- Switch Period Elencos -->
                     <div class="flex items-center justify-between bg-navy-900 p-4 rounded-xl border border-slate-800">
                         <span class="text-sm font-bold text-white">Visualizar Elencos:</span>
@@ -525,9 +563,13 @@
             appId: "1:366267653198:web:650743ca118bc8c239771f"
         };
 
+        // SENHA DO ADMINISTRADOR
+        const ADMIN_PASSWORD = "joaoGilvane"; 
+
         let db = null;
         let rootRef = null;
         let isFirebaseOnline = false;
+        let isAdmin = false;
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -535,6 +577,63 @@
             rootRef = db.ref("futebol_2026");
         } catch(e) {
             console.warn("Firebase fallback:", e);
+        }
+
+        // =========================================================
+        // CONTROLE DE ACESSO (MODO VISITANTE X ADMIN)
+        // =========================================================
+        function loginAsGuest() {
+            isAdmin = false;
+            document.getElementById('auth-screen').classList.add('hidden');
+            updateRoleBadgeUI();
+            renderAllViews();
+        }
+
+        function showAdminPasswordInput() {
+            document.getElementById('admin-pass-box').classList.remove('hidden');
+        }
+
+        function loginAsAdmin() {
+            const pass = document.getElementById('admin-password-input').value;
+            const errEl = document.getElementById('admin-pass-error');
+            
+            if (pass === ADMIN_PASSWORD) {
+                isAdmin = true;
+                errEl.classList.add('hidden');
+                document.getElementById('auth-screen').classList.add('hidden');
+                updateRoleBadgeUI();
+                renderAllViews();
+            } else {
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function logoutRole() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('admin-password-input').value = "";
+            document.getElementById('admin-pass-box').classList.add('hidden');
+        }
+
+        function updateRoleBadgeUI() {
+            const text = document.getElementById('user-role-text');
+            const icon = document.getElementById('user-role-icon');
+            const resetBtn = document.getElementById('admin-reset-btn');
+            const addBox = document.getElementById('admin-add-player-box');
+            const elencosWrapper = document.getElementById('elencos-list-wrapper');
+
+            if (isAdmin) {
+                text.textContent = "Modo Admin";
+                icon.className = "fa-solid fa-user-shield text-gold-400";
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                if (addBox) addBox.classList.remove('hidden');
+                if (elencosWrapper) elencosWrapper.className = "lg:col-span-2 space-y-6";
+            } else {
+                text.textContent = "Visitante (Leitura)";
+                icon.className = "fa-solid fa-eye text-slate-400";
+                if (resetBtn) resetBtn.classList.add('hidden');
+                if (addBox) addBox.classList.add('hidden');
+                if (elencosWrapper) elencosWrapper.className = "lg:col-span-3 space-y-6";
+            }
         }
 
         // =========================================================
@@ -561,36 +660,30 @@
 
         // Estado Global da Aplicação
         let appData = {
-            teams: {
-                manha: [
-                    "Garras Noturnas",
-                    "Imperadores do Gelo",
-                    "Guardas de Ferro",
-                    "Ventos Celestes",
-                    "Presas Prateadas",
-                    "Dragões Celestiais",
-                    "Plumas Reais"
-                ],
-                tarde: [
-                    "Fúrias do Norte",
-                    "Gigantes da Ilha",
-                    "Reis Implacáveis",
-                    "Garras de Neve",
-                    "Lanças do Mar"
-                ]
-            },
-            jogos: {
-                manha: {},
-                tarde: {}
-            },
-            jogadores: {
-                // id: { id, nome, time, periodo, gols }
-            }
+            teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+            jogos: { manha: {}, tarde: {} },
+            jogadores: {}
         };
 
-        let currentPeriod = 'manha'; // 'manha' ou 'tarde'
+        let currentPeriod = 'manha'; 
+        let currentSubTab = 'tabela';
+        let currentArtilhariaFilter = 'todos';
+        let currentElencoPeriod = 'manha';
+
         function getTeams(period) {
             return (appData.teams && appData.teams[period]) ? appData.teams[period] : DEFAULT_TEAMS[period];
+        }
+
+        function slugify(text) {
+            return text
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
         }
 
         // =========================================================
@@ -600,7 +693,7 @@
             let teams = [...teamsList];
             let isOdd = teams.length % 2 !== 0;
             if (isOdd) {
-                teams.push("FOLGA"); // Bye team for odd number
+                teams.push("FOLGA"); 
             }
 
             let numRounds = teams.length - 1;
@@ -618,19 +711,11 @@
                     }
                 }
                 rounds.push(matches);
-
-                // Rotate teams array leaving first index fixed
                 teams.splice(1, 0, teams.pop());
             }
 
             return rounds;
         }
-
-        // Pre-calcular rodadas da Manhã e Tarde
-        const RODADAS = {
-            manha: generateRoundRobin(DEFAULT_TEAMS.manha),
-            tarde: generateRoundRobin(DEFAULT_TEAMS.tarde)
-        };
 
         // =========================================================
         // FIREBASE OBSERVER & INIT
@@ -639,23 +724,17 @@
             initFirebaseListener();
             populateHomeTeamBadges();
             updateTeamDropdown();
+            updateRoleBadgeUI();
         };
 
         function initFirebaseListener() {
-            const statusBadge = document.getElementById("db-status-badge");
-            const statusText = document.getElementById("db-status-text");
-
             if (!rootRef) {
-                if (statusText) statusText.textContent = "Modo Local (Offline)";
                 renderAllViews();
                 return;
             }
 
             rootRef.on('value', (snapshot) => {
                 isFirebaseOnline = true;
-                if (statusText) statusText.textContent = "Conectado Realtime";
-                if (statusBadge) statusBadge.classList.remove('hidden');
-
                 const val = snapshot.val();
                 if (val) {
                     appData = {
@@ -664,7 +743,6 @@
                         jogadores: val.jogadores || {}
                     };
                 } else {
-                    // Seed initial data if database is empty
                     appData.teams = JSON.parse(JSON.stringify(DEFAULT_TEAMS));
                     saveStateToFirebase();
                 }
@@ -672,13 +750,12 @@
                 renderAllViews();
             }, (error) => {
                 console.error("Firebase error:", error);
-                if (statusText) statusText.textContent = "Modo Local";
                 renderAllViews();
             });
         }
 
         function saveStateToFirebase() {
-            if (rootRef && isFirebaseOnline) {
+            if (rootRef && isFirebaseOnline && isAdmin) {
                 rootRef.set(appData);
             }
         }
@@ -687,12 +764,10 @@
         // NAVEGAÇÃO ENTRE ABAS
         // =========================================================
         function switchTab(tabId) {
-            // Hide all pages
             ['home', 'championship', 'artilharia', 'gestao'].forEach(p => {
                 document.getElementById(`page-${p}`).classList.add('hidden');
             });
 
-            // Reset Nav Styles
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.className = "nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60 flex items-center gap-2";
             });
@@ -822,7 +897,7 @@
         }
 
         // =========================================================
-        // CÁLCULO DE PONTOS CORRIDOS (REGRA BRASILEIRÃO)
+        // CÁLCULO DE PONTOS CORRIDOS
         // =========================================================
         function calculateStandings(period) {
             const teams = getTeams(period);
@@ -859,17 +934,14 @@
                         stats[t2].gc += g1;
 
                         if (g1 > g2) {
-                            // Vitória T1
                             stats[t1].pts += 3;
                             stats[t1].v++;
                             stats[t2].d++;
                         } else if (g2 > g1) {
-                            // Vitória T2
                             stats[t2].pts += 3;
                             stats[t2].v++;
                             stats[t1].d++;
                         } else {
-                            // Empate
                             stats[t1].pts += 1;
                             stats[t2].pts += 1;
                             stats[t1].e++;
@@ -879,12 +951,10 @@
                 }
             });
 
-            // Calculate SG
             Object.keys(stats).forEach(t => {
                 stats[t].sg = stats[t].gp - stats[t].gc;
             });
 
-            // SORTING / TIE-BREAKERS: 1º PTS | 2º SG | 3º GP | 4º V
             const leaderboard = Object.values(stats).sort((a, b) => {
                 if (b.pts !== a.pts) return b.pts - a.pts;
                 if (b.sg !== a.sg) return b.sg - a.sg;
@@ -935,7 +1005,7 @@
         }
 
         // =========================================================
-        // RENDERING DE JOGOS & PLACARES (RODADAS)
+        // RENDERING DE JOGOS & PLACARES
         // =========================================================
         function renderMatchesView() {
             const container = document.getElementById('matches-container');
@@ -964,6 +1034,8 @@
                     const val1 = savedGame.gols1 !== undefined ? savedGame.gols1 : '';
                     const val2 = savedGame.gols2 !== undefined ? savedGame.gols2 : '';
 
+                    const disabledAttr = isAdmin ? '' : 'disabled readOnly';
+
                     html += `
                         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <!-- Team 1 -->
@@ -973,13 +1045,13 @@
 
                             <!-- Placar Controls -->
                             <div class="flex items-center justify-center gap-2 w-full sm:w-auto">
-                                <input type="number" min="0" max="99" id="input-${gameId}-1" value="${val1}" placeholder="0" 
-                                    class="w-12 h-11 bg-slate-900 border border-slate-700 rounded-lg text-center font-black text-lg text-white focus:outline-none focus:border-pitch-500">
+                                <input type="number" min="0" max="99" id="input-${gameId}-1" value="${val1}" placeholder="0" ${disabledAttr}
+                                    class="w-12 h-11 bg-slate-900 border border-slate-700 rounded-lg text-center font-black text-lg text-white focus:outline-none focus:border-pitch-500 disabled:opacity-80">
                                 
                                 <span class="font-bold text-slate-500 text-xs">X</span>
 
-                                <input type="number" min="0" max="99" id="input-${gameId}-2" value="${val2}" placeholder="0" 
-                                    class="w-12 h-11 bg-slate-900 border border-slate-700 rounded-lg text-center font-black text-lg text-white focus:outline-none focus:border-pitch-500">
+                                <input type="number" min="0" max="99" id="input-${gameId}-2" value="${val2}" placeholder="0" ${disabledAttr}
+                                    class="w-12 h-11 bg-slate-900 border border-slate-700 rounded-lg text-center font-black text-lg text-white focus:outline-none focus:border-pitch-500 disabled:opacity-80">
                             </div>
 
                             <!-- Team 2 -->
@@ -989,11 +1061,13 @@
 
                             <!-- Action Buttons -->
                             <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
-                                <button onclick="saveMatchScore('${match.team1}', '${match.team2}', '${gameId}')" title="Salvar Placar"
-                                    class="px-3 py-2 bg-pitch-600 hover:bg-pitch-500 text-white rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
-                                    <i class="fa-solid fa-check"></i> Salvar
-                                </button>
-                                <button onclick="openGoalsModal('${match.team1}', '${match.team2}', '${gameId}')" title="Atribuir Autores dos Gols"
+                                ${isAdmin ? `
+                                    <button onclick="saveMatchScore('${match.team1}', '${match.team2}', '${gameId}')" title="Salvar Placar"
+                                        class="px-3 py-2 bg-pitch-600 hover:bg-pitch-500 text-white rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
+                                        <i class="fa-solid fa-check"></i> Salvar
+                                    </button>
+                                ` : ''}
+                                <button onclick="openGoalsModal('${match.team1}', '${match.team2}', '${gameId}')" title="Autores dos Gols"
                                     class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-gold-400 border border-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
                                     <i class="fa-solid fa-futbol"></i> Gols
                                 </button>
@@ -1011,26 +1085,8 @@
             container.innerHTML = html;
         }
 
-        // =========================================================
-        // AUXILIARES & SALVAR PLACAR DA PARTIDA
-        // =========================================================
-        let currentSubTab = 'tabela';
-        let currentArtilhariaFilter = 'todos';
-        let currentElencoPeriod = 'manha';
-
-        function slugify(text) {
-            return text
-                .toString()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase()
-                .trim()
-                .replace(/[^a-z0-9 -]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-');
-        }
-
         function saveMatchScore(team1, team2, gameId) {
+            if (!isAdmin) return;
             const input1 = document.getElementById(`input-${gameId}-1`);
             const input2 = document.getElementById(`input-${gameId}-2`);
 
@@ -1042,10 +1098,13 @@
             if (!appData.jogos) appData.jogos = { manha: {}, tarde: {} };
             if (!appData.jogos[currentPeriod]) appData.jogos[currentPeriod] = {};
 
+            const existingMatchData = appData.jogos[currentPeriod][gameId] || {};
+
             if (val1 === '' && val2 === '') {
                 delete appData.jogos[currentPeriod][gameId];
             } else {
                 appData.jogos[currentPeriod][gameId] = {
+                    ...existingMatchData,
                     team1,
                     team2,
                     gols1: val1 !== '' ? parseInt(val1) : 0,
@@ -1058,7 +1117,7 @@
         }
 
         // =========================================================
-        // ARTILHARIA & MODAL DE GOLS
+        // GOLS ESPECÍFICOS POR PARTIDA & ARTILHARIA
         // =========================================================
         function getTopScorer() {
             const players = Object.values(appData.jogadores || {});
@@ -1068,17 +1127,138 @@
             return sorted[0];
         }
 
+        function getMatchGoalCount(gameId, playerId) {
+            const match = appData.jogos?.[currentPeriod]?.[gameId];
+            if (!match || !match.matchGols) return 0;
+            return match.matchGols[playerId] || 0;
+        }
+
+        function addMatchGoal(gameId, playerId, amount) {
+            if (!isAdmin) return;
+
+            if (!appData.jogos) appData.jogos = { manha: {}, tarde: {} };
+            if (!appData.jogos[currentPeriod]) appData.jogos[currentPeriod] = {};
+
+            if (!appData.jogos[currentPeriod][gameId]) {
+                alert("Por favor, preencha e salve primeiro o placar geral da partida!");
+                return;
+            }
+
+            const match = appData.jogos[currentPeriod][gameId];
+            if (!match.matchGols) match.matchGols = {};
+
+            const currentInMatch = match.matchGols[playerId] || 0;
+            const newInMatch = Math.max(0, currentInMatch + amount);
+            match.matchGols[playerId] = newInMatch;
+
+            // Recalcular total de gols do jogador no campeonato inteiro
+            recalculatePlayerTotalGoals(playerId);
+
+            saveStateToFirebase();
+            renderAllViews();
+        }
+
+        function recalculatePlayerTotalGoals(playerId) {
+            let total = 0;
+            ['manha', 'tarde'].forEach(p => {
+                const matches = appData.jogos[p] || {};
+                Object.values(matches).forEach(m => {
+                    if (m && m.matchGols && m.matchGols[playerId]) {
+                        total += m.matchGols[playerId];
+                    }
+                });
+            });
+
+            if (appData.jogadores && appData.jogadores[playerId]) {
+                appData.jogadores[playerId].gols = total;
+            }
+        }
+
+        function openGoalsModal(team1, team2, gameId) {
+            const modal = document.getElementById('modal-match-goals');
+            const content = document.getElementById('modal-match-goals-content');
+
+            const t1Players = getPlayersByTeamAndPeriod(team1, currentPeriod);
+            const t2Players = getPlayersByTeamAndPeriod(team2, currentPeriod);
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-center pb-2 border-b border-slate-800">
+                        <span class="text-xs font-bold text-slate-400">Gols Marcados Nesta Partida</span>
+                        <h4 class="font-extrabold text-white text-base">${team1} vs ${team2}</h4>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-pitch-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
+                            <span>${team1}</span>
+                        </h4>
+                        ${t1Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
+                            <div class="grid grid-cols-1 gap-2">
+                                ${t1Players.map(p => {
+                                    const matchGols = getMatchGoalCount(gameId, p.id);
+                                    return `
+                                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                                            <div>
+                                                <span class="font-bold text-white block">${p.nome}</span>
+                                                <span class="text-[10px] text-slate-400">Total no torneio: ${p.gols || 0}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-black text-gold-400 text-sm bg-slate-900 px-2 py-1 rounded border border-slate-800">${matchGols} gol(s) nesta partida</span>
+                                                ${isAdmin ? `
+                                                    <button onclick="addMatchGoal('${gameId}', '${p.id}', 1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2.5 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded font-bold text-xs">+1</button>
+                                                    <button onclick="addMatchGoal('${gameId}', '${p.id}', -1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-bold text-xs">-1</button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `}
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-orange-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
+                            <span>${team2}</span>
+                        </h4>
+                        ${t2Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
+                            <div class="grid grid-cols-1 gap-2">
+                                ${t2Players.map(p => {
+                                    const matchGols = getMatchGoalCount(gameId, p.id);
+                                    return `
+                                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                                            <div>
+                                                <span class="font-bold text-white block">${p.nome}</span>
+                                                <span class="text-[10px] text-slate-400">Total no torneio: ${p.gols || 0}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-black text-gold-400 text-sm bg-slate-900 px-2 py-1 rounded border border-slate-800">${matchGols} gol(s) nesta partida</span>
+                                                ${isAdmin ? `
+                                                    <button onclick="addMatchGoal('${gameId}', '${p.id}', 1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2.5 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded font-bold text-xs">+1</button>
+                                                    <button onclick="addMatchGoal('${gameId}', '${p.id}', -1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-bold text-xs">-1</button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeGoalsModal() {
+            document.getElementById('modal-match-goals').classList.add('hidden');
+        }
+
         function renderArtilharia(filter = 'todos') {
             currentArtilhariaFilter = filter;
-            const filterBtns = ['todos', 'manha', 'tarde'];
-            filterBtns.forEach(f => {
+            ['todos', 'manha', 'tarde'].forEach(f => {
                 const btn = document.getElementById(`filter-art-${f}`);
                 if (btn) {
-                    if (f === filter) {
-                        btn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white";
-                    } else {
-                        btn.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
-                    }
+                    btn.className = f === filter ? "px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-pitch-600 text-white" : "px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
                 }
             });
 
@@ -1092,7 +1272,6 @@
             const podiumContainer = document.getElementById('artilharia-podium');
             const tableBody = document.getElementById('artilharia-table-body');
 
-            // Render Podium (Top 3)
             const top3 = players.slice(0, 3);
             if (top3.length > 0 && top3[0].gols > 0) {
                 podiumContainer.innerHTML = top3.map((p, idx) => {
@@ -1111,7 +1290,6 @@
                 podiumContainer.innerHTML = `<div class="col-span-3 text-center py-4 text-xs text-slate-500 italic">Nenhum gol registrado no ranking ainda.</div>`;
             }
 
-            // Render Table
             tableBody.innerHTML = players.map((p, idx) => `
                 <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
                     <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
@@ -1120,14 +1298,17 @@
                     <td class="py-3 px-4 text-slate-400 capitalize">${p.periodo}</td>
                     <td class="py-3 px-4 text-center font-black text-gold-400 text-base">${p.gols || 0}</td>
                     <td class="py-3 px-4 text-right">
-                        <button onclick="addGoalToPlayer('${p.id}', 1)" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded text-xs font-bold mr-1">+1 Gol</button>
-                        <button onclick="addGoalToPlayer('${p.id}', -1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold">-1</button>
+                        ${isAdmin ? `
+                            <button onclick="addGoalToPlayerManual('${p.id}', 1)" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded text-xs font-bold mr-1">+1 Gol</button>
+                            <button onclick="addGoalToPlayerManual('${p.id}', -1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold">-1</button>
+                        ` : '<span class="text-xs text-slate-500 italic">Somente leitura</span>'}
                     </td>
                 </tr>
             `).join('');
         }
 
-        function addGoalToPlayer(playerId, amount) {
+        function addGoalToPlayerManual(playerId, amount) {
+            if (!isAdmin) return;
             if (appData.jogadores && appData.jogadores[playerId]) {
                 const current = appData.jogadores[playerId].gols || 0;
                 appData.jogadores[playerId].gols = Math.max(0, current + amount);
@@ -1136,66 +1317,8 @@
             }
         }
 
-        function openGoalsModal(team1, team2, gameId) {
-            const modal = document.getElementById('modal-match-goals');
-            const content = document.getElementById('modal-match-goals-content');
-
-            const t1Players = getPlayersByTeamAndPeriod(team1, currentPeriod);
-            const t2Players = getPlayersByTeamAndPeriod(team2, currentPeriod);
-
-            content.innerHTML = `
-                <div class="space-y-6">
-                    <div class="space-y-3">
-                        <h4 class="font-bold text-pitch-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
-                            <span>${team1}</span>
-                            <span class="text-xs text-slate-400 font-normal">Clique para adicionar gol</span>
-                        </h4>
-                        ${t1Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                ${t1Players.map(p => `
-                                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                                        <span class="font-bold text-white">${p.nome}</span>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-black text-gold-400">${p.gols || 0} G</span>
-                                            <button onclick="addGoalToPlayer('${p.id}', 1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded font-bold">+1</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `}
-                    </div>
-
-                    <div class="space-y-3">
-                        <h4 class="font-bold text-orange-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
-                            <span>${team2}</span>
-                            <span class="text-xs text-slate-400 font-normal">Clique para adicionar gol</span>
-                        </h4>
-                        ${t2Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                ${t2Players.map(p => `
-                                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                                        <span class="font-bold text-white">${p.nome}</span>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-black text-gold-400">${p.gols || 0} G</span>
-                                            <button onclick="addGoalToPlayer('${p.id}', 1); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded font-bold">+1</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `}
-                    </div>
-                </div>
-            `;
-
-            modal.classList.remove('hidden');
-        }
-
-        function closeGoalsModal() {
-            document.getElementById('modal-match-goals').classList.add('hidden');
-        }
-
         // =========================================================
-        // GESTÃO DE TIMES E ELENCOS (INCLUINDO RENOMEAR TIME)
+        // GESTÃO DE TIMES E ELENCOS
         // =========================================================
         function updateTeamDropdown() {
             const period = document.getElementById('new-player-period').value;
@@ -1206,6 +1329,7 @@
         }
 
         function renameTeam(period, oldName) {
+            if (!isAdmin) return;
             const newName = prompt(`Digite o novo nome para o time "${oldName}":`, oldName);
             if (!newName || newName.trim() === "" || newName.trim() === oldName) return;
 
@@ -1217,14 +1341,12 @@
                 appData.teams[period][teamIndex] = trimmedNewName;
             }
 
-            // Atualizar jogadores vinculados
             Object.values(appData.jogadores || {}).forEach(p => {
                 if (p.team === oldName && p.periodo === period) {
                     p.team = trimmedNewName;
                 }
             });
 
-            // Atualizar registros de jogos já ocorridos
             if (appData.jogos && appData.jogos[period]) {
                 const updatedGames = {};
                 Object.entries(appData.jogos[period]).forEach(([gameId, game]) => {
@@ -1250,6 +1372,8 @@
 
         function handleAddPlayer(e) {
             e.preventDefault();
+            if (!isAdmin) return;
+
             const period = document.getElementById('new-player-period').value;
             const team = document.getElementById('new-player-team').value;
             const nameInput = document.getElementById('new-player-name');
@@ -1276,6 +1400,7 @@
         }
 
         function removePlayer(playerId) {
+            if (!isAdmin) return;
             if (confirm("Deseja realmente remover este jogador?")) {
                 delete appData.jogadores[playerId];
                 saveStateToFirebase();
@@ -1315,9 +1440,11 @@
                             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                                 <div class="flex items-center gap-2">
                                     <h4 class="font-bold text-white text-base">${team}</h4>
-                                    <button onclick="renameTeam('${period}', '${team}')" class="text-slate-400 hover:text-amber-400 p-1 text-xs" title="Editar nome do time">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
+                                    ${isAdmin ? `
+                                        <button onclick="renameTeam('${period}', '${team}')" class="text-slate-400 hover:text-amber-400 p-1 text-xs" title="Editar nome do time">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                    ` : ''}
                                 </div>
                                 <span class="text-xs text-slate-400 font-semibold">${players.length} Atleta(s)</span>
                             </div>
@@ -1330,9 +1457,11 @@
                                         <span class="text-slate-200 font-medium">${p.nome}</span>
                                         <div class="flex items-center gap-2">
                                             <span class="text-gold-400 font-bold">${p.gols || 0} Gols</span>
-                                            <button onclick="removePlayer('${p.id}')" class="text-red-400 hover:text-red-300 ml-1">
-                                                <i class="fa-solid fa-xmark"></i>
-                                            </button>
+                                            ${isAdmin ? `
+                                                <button onclick="removePlayer('${p.id}')" class="text-red-400 hover:text-red-300 ml-1">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            ` : ''}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -1347,6 +1476,7 @@
         // ZERAR / RESETAR BANCO DE DADOS
         // =========================================================
         function confirmReset() {
+            if (!isAdmin) return;
             if (confirm("ATENÇÃO: Deseja apagar todos os placares, partidas e dados de artilharia?")) {
                 appData = {
                     teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
