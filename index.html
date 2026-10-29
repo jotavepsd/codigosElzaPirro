@@ -196,7 +196,7 @@
                 </div>
                 <div class="relative z-10 max-w-2xl space-y-4">
                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-pitch-500/10 text-pitch-400 border border-pitch-500/20">
-                        <i class="fa-solid fa-[#22c55e] fa-circle-check"></i> Regulamento Brasileirão
+                        <i class="fa-solid fa-circle-check"></i> Regulamento Brasileirão
                     </span>
                     <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
                         Campeonato Interclasse de Futebol 2026
@@ -212,6 +212,19 @@
                             <i class="fa-solid fa-cloud-sun"></i> Ver Tabela da Tarde
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- PRÓXIMAS PARTIDAS (MANHÃ E TARDE LADO A LADO) -->
+            <div id="home-next-matches-section" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-bell text-gold-400"></i> Próximas Partidas Agendadas
+                    </h3>
+                    <span class="text-xs text-slate-400">Próximos confrontos do campeonato</span>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6" id="home-next-matches-cards">
+                    <!-- Injetado Dinamicamente via JS -->
                 </div>
             </div>
 
@@ -371,7 +384,7 @@
                             <span><strong class="text-slate-200">E:</strong> Empates</span>
                             <span><strong class="text-slate-200">D:</strong> Derrotas</span>
                             <span><strong class="text-slate-200">GP:</strong> Gols Pró</span>
-                            <span><strong class="text-slate-200">GC:</strong> Gols Sofrenos</span>
+                            <span><strong class="text-slate-200">GC:</strong> Gols Sofridos</span>
                             <span><strong class="text-slate-200">SG:</strong> Saldo de Gols</span>
                         </div>
                         <div class="text-emerald-400 font-semibold flex items-center gap-1">
@@ -453,7 +466,7 @@
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-3">
                     <i class="fa-solid fa-users-gear text-blue-400"></i> Cadastro & Edição de Times e Elencos
                 </h2>
-                <p class="text-slate-400 text-sm">Altere o nome das equipes e adicione atletas para registrar a autoria dos gols durante os jogos.</p>
+                <p class="text-slate-400 text-sm">Altere o nome das equipes, adicione escudos personalizados e gerencie atletas do campeonato.</p>
             </div>
 
             <div class="grid lg:grid-cols-3 gap-6">
@@ -641,7 +654,7 @@
         // =========================================================
         const DEFAULT_TEAMS = {
             manha: [
-                "Garras Noturnas",
+                "Gavras Noturnas",
                 "Imperadores do Gelo",
                 "Guardas de Ferro",
                 "Ventos Celestes",
@@ -653,7 +666,7 @@
                 "Fúrias do Norte",
                 "Gigantes da Ilha",
                 "Reis Implacáveis",
-                "Garras de Neve",
+                "Gavras de Neve",
                 "Lanças do Mar"
             ]
         };
@@ -661,6 +674,8 @@
         // Estado Global da Aplicação
         let appData = {
             teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+            teamLogos: {},
+            nextMatches: { manha: null, tarde: null },
             jogos: { manha: {}, tarde: {} },
             jogadores: {}
         };
@@ -672,6 +687,22 @@
 
         function getTeams(period) {
             return (appData.teams && appData.teams[period]) ? appData.teams[period] : DEFAULT_TEAMS[period];
+        }
+
+        function getTeamLogo(teamName) {
+            if (appData.teamLogos && appData.teamLogos[teamName]) {
+                return appData.teamLogos[teamName];
+            }
+            return null;
+        }
+
+        function renderTeamBadge(teamName, sizeClass = "w-6 h-6") {
+            const logoUrl = getTeamLogo(teamName);
+            if (logoUrl) {
+                return `<img src="${logoUrl}" alt="${teamName}" class="${sizeClass} rounded-full object-cover border border-slate-700 bg-slate-950 shrink-0">`;
+            }
+            const initial = teamName ? teamName.charAt(0).toUpperCase() : '?';
+            return `<div class="${sizeClass} rounded-full bg-slate-800 border border-slate-700 text-gold-400 font-extrabold flex items-center justify-center text-[10px] shrink-0">${initial}</div>`;
         }
 
         function slugify(text) {
@@ -739,6 +770,8 @@
                 if (val) {
                     appData = {
                         teams: val.teams || JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+                        teamLogos: val.teamLogos || {},
+                        nextMatches: val.nextMatches || { manha: null, tarde: null },
                         jogos: val.jogos || { manha: {}, tarde: {} },
                         jogadores: val.jogadores || {}
                     };
@@ -818,6 +851,7 @@
 
         function renderAllViews() {
             updateHomeStats();
+            populateHomeTeamBadges();
             if (!document.getElementById('page-championship').classList.contains('hidden')) {
                 renderChampionshipHeader();
                 renderChampionshipView();
@@ -831,8 +865,108 @@
         }
 
         // =========================================================
-        // HOME PAGE RENDERING
+        // HOME PAGE RENDERING & NEXT MATCHES
         // =========================================================
+        function renderNextMatchCards() {
+            const container = document.getElementById('home-next-matches-cards');
+            if (!container) return;
+
+            const nextManha = appData.nextMatches?.manha;
+            const nextTarde = appData.nextMatches?.tarde;
+
+            const createCard = (period, data, title, iconClass, colorTheme) => {
+                if (!data || !data.gameId) {
+                    return `
+                        <div class="bg-navy-900/80 rounded-2xl p-6 border border-slate-800 flex flex-col justify-center items-center text-center space-y-2 min-h-[160px]">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">${title}</span>
+                            <i class="fa-regular fa-calendar-xmark text-2xl text-slate-600 mt-2"></i>
+                            <p class="text-xs text-slate-400 font-semibold">Nenhuma partida agendada como próxima.</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-navy-900 rounded-2xl p-6 border border-slate-800 space-y-4 relative overflow-hidden shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                            <span class="px-3 py-1 rounded-lg text-xs font-bold uppercase ${colorTheme} border border-current/20 flex items-center gap-1.5">
+                                <i class="${iconClass}"></i> ${title}
+                            </span>
+                            <span class="text-xs font-bold text-gold-400 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock"></i> ${data.dateTime || 'A definir'}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 py-2">
+                            <!-- Time 1 -->
+                            <div class="flex flex-col items-center gap-2 w-5/12 text-center">
+                                ${renderTeamBadge(data.team1, "w-12 h-12")}
+                                <span class="font-extrabold text-sm text-white leading-tight">${data.team1}</span>
+                            </div>
+
+                            <!-- VS Badge -->
+                            <div class="w-2/12 flex flex-col items-center justify-center">
+                                <span class="w-9 h-9 rounded-full bg-slate-950 border border-slate-800 text-slate-400 font-black text-xs flex items-center justify-center shadow">VS</span>
+                            </div>
+
+                            <!-- Time 2 -->
+                            <div class="flex flex-col items-center gap-2 w-5/12 text-center">
+                                ${renderTeamBadge(data.team2, "w-12 h-12")}
+                                <span class="font-extrabold text-sm text-white leading-tight">${data.team2}</span>
+                            </div>
+                        </div>
+
+                        ${isAdmin ? `
+                            <div class="pt-2 border-t border-slate-800 flex justify-end">
+                                <button onclick="cancelNextMatch('${period}')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
+                                    <i class="fa-solid fa-xmark"></i> Desmarcar Próxima
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            };
+
+            container.innerHTML = 
+                createCard('manha', nextManha, 'Manhã', 'fa-solid fa-sun', 'bg-amber-500/10 text-amber-400') +
+                createCard('tarde', nextTarde, 'Tarde', 'fa-solid fa-cloud-sun', 'bg-orange-500/10 text-orange-400');
+        }
+
+        function setNextMatch(period, gameId, team1, team2) {
+            if (!isAdmin) return;
+
+            const existing = appData.nextMatches?.[period];
+            if (existing && existing.gameId) {
+                alert(`Já existe um próximo jogo agendado no período da ${period === 'manha' ? 'Manhã' : 'Tarde'}! Salve o resultado do jogo anterior antes de agendar outro.`);
+                return;
+            }
+
+            const dateTimeInput = prompt("Digite a data/horário do jogo (Ex: 15/11 às 08:30):");
+            if (dateTimeInput === null) return;
+
+            if (!appData.nextMatches) appData.nextMatches = { manha: null, tarde: null };
+
+            appData.nextMatches[period] = {
+                gameId,
+                team1,
+                team2,
+                dateTime: dateTimeInput.trim()
+            };
+
+            saveStateToFirebase();
+            renderAllViews();
+            alert("Partida marcada como PRÓXIMA PARTIDA com sucesso!");
+        }
+
+        function cancelNextMatch(period) {
+            if (!isAdmin) return;
+            if (confirm(`Deseja desmarcar a próxima partida do período da ${period === 'manha' ? 'Manhã' : 'Tarde'}?`)) {
+                if (!appData.nextMatches) appData.nextMatches = { manha: null, tarde: null };
+                appData.nextMatches[period] = null;
+                saveStateToFirebase();
+                renderAllViews();
+            }
+        }
+
         function populateHomeTeamBadges() {
             const manhaContainer = document.getElementById('home-manha-teams');
             const tardeContainer = document.getElementById('home-tarde-teams');
@@ -840,12 +974,14 @@
             const tardeTeams = getTeams('tarde');
 
             manhaContainer.innerHTML = manhaTeams.map(t => 
-                `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60">${t}</span>`
+                `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">${renderTeamBadge(t, "w-4 h-4")} ${t}</span>`
             ).join('');
 
             tardeContainer.innerHTML = tardeTeams.map(t => 
-                `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60">${t}</span>`
+                `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">${renderTeamBadge(t, "w-4 h-4")} ${t}</span>`
             ).join('');
+
+            renderNextMatchCards();
         }
 
         function updateHomeStats() {
@@ -990,7 +1126,10 @@
                 return `
                     <tr class="${rowBg}">
                         <td class="py-3.5 px-3 sm:px-4 text-center">${posBadge}</td>
-                        <td class="py-3.5 px-4 font-bold text-white">${item.nome}</td>
+                        <td class="py-3.5 px-4 font-bold text-white flex items-center gap-2.5">
+                            ${renderTeamBadge(item.nome, "w-6 h-6")}
+                            <span>${item.nome}</span>
+                        </td>
                         <td class="py-3.5 px-3 text-center font-black text-pitch-400 text-base bg-slate-900/40">${item.pts}</td>
                         <td class="py-3.5 px-3 text-center text-slate-300">${item.j}</td>
                         <td class="py-3.5 px-3 text-center font-semibold text-emerald-400">${item.v}</td>
@@ -1012,6 +1151,7 @@
             const currentTeams = getTeams(currentPeriod);
             const rounds = generateRoundRobin(currentTeams);
             const periodGames = appData.jogos[currentPeriod] || {};
+            const scheduledNextMatch = appData.nextMatches?.[currentPeriod];
 
             let html = "";
 
@@ -1033,13 +1173,20 @@
                     const savedGame = periodGames[gameId] || {};
                     const val1 = savedGame.gols1 !== undefined ? savedGame.gols1 : '';
                     const val2 = savedGame.gols2 !== undefined ? savedGame.gols2 : '';
+                    const isPlayed = val1 !== '' && val2 !== '';
 
-                    const disabledAttr = isAdmin ? '' : 'disabled readOnly';
+                    const isScheduledAsNext = scheduledNextMatch && scheduledNextMatch.gameId === gameId;
+                    const hasNextMatchLocked = scheduledNextMatch && scheduledNextMatch.gameId && !isScheduledAsNext;
+
+                    const disabledAttr = (isAdmin && !isPlayed) ? '' : 'disabled readOnly';
 
                     html += `
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="bg-slate-950 p-4 rounded-xl border ${isPlayed ? 'border-emerald-500/40 bg-slate-950/90' : (isScheduledAsNext ? 'border-gold-500 ring-2 ring-gold-500/20' : 'border-slate-800/80')} flex flex-col sm:flex-row items-center justify-between gap-4 relative">
+                            ${isPlayed ? `<span class="absolute -top-2.5 left-4 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Partida Realizada</span>` : ''}
+
                             <!-- Team 1 -->
-                            <div class="flex items-center justify-end sm:justify-start gap-3 w-full sm:w-5/12 text-right sm:text-left">
+                            <div class="flex items-center justify-end sm:justify-start gap-3 w-full sm:w-5/12 text-right sm:text-left pt-2 sm:pt-0">
+                                ${renderTeamBadge(match.team1, "w-7 h-7")}
                                 <span class="font-bold text-sm text-white">${match.team1}</span>
                             </div>
 
@@ -1057,16 +1204,28 @@
                             <!-- Team 2 -->
                             <div class="flex items-center justify-start sm:justify-end gap-3 w-full sm:w-5/12 text-left sm:text-right">
                                 <span class="font-bold text-sm text-white">${match.team2}</span>
+                                ${renderTeamBadge(match.team2, "w-7 h-7")}
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
-                                ${isAdmin ? `
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800 flex-wrap">
+                                ${isAdmin ? (isPlayed ? `
+                                    <button onclick="resetMatchScore('${gameId}')" title="Desfazer/Editar Placar"
+                                        class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
+                                        <i class="fa-solid fa-rotate-left"></i> Editar
+                                    </button>
+                                ` : `
                                     <button onclick="saveMatchScore('${match.team1}', '${match.team2}', '${gameId}')" title="Salvar Placar"
                                         class="px-3 py-2 bg-pitch-600 hover:bg-pitch-500 text-white rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
                                         <i class="fa-solid fa-check"></i> Salvar
                                     </button>
-                                ` : ''}
+
+                                    <button onclick="setNextMatch('${currentPeriod}', '${gameId}', '${match.team1}', '${match.team2}')" 
+                                        ${hasNextMatchLocked || isScheduledAsNext ? 'disabled' : ''}
+                                        class="px-3 py-2 ${isScheduledAsNext ? 'bg-gold-500 text-navy-950 font-black' : (hasNextMatchLocked ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-700 text-gold-400')} border border-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                                        <i class="fa-solid fa-bell"></i> ${isScheduledAsNext ? 'Em Destaque' : 'Marcar Próximo'}
+                                    </button>
+                                `) : ''}
                                 <button onclick="openGoalsModal('${match.team1}', '${match.team2}', '${gameId}')" title="Autores dos Gols"
                                     class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-gold-400 border border-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1">
                                     <i class="fa-solid fa-futbol"></i> Gols
@@ -1095,25 +1254,42 @@
             const val1 = input1.value.trim();
             const val2 = input2.value.trim();
 
+            if (val1 === '' || val2 === '') {
+                alert("Por favor, informe o placar dos dois times antes de salvar.");
+                return;
+            }
+
             if (!appData.jogos) appData.jogos = { manha: {}, tarde: {} };
             if (!appData.jogos[currentPeriod]) appData.jogos[currentPeriod] = {};
 
             const existingMatchData = appData.jogos[currentPeriod][gameId] || {};
 
-            if (val1 === '' && val2 === '') {
-                delete appData.jogos[currentPeriod][gameId];
-            } else {
-                appData.jogos[currentPeriod][gameId] = {
-                    ...existingMatchData,
-                    team1,
-                    team2,
-                    gols1: val1 !== '' ? parseInt(val1) : 0,
-                    gols2: val2 !== '' ? parseInt(val2) : 0
-                };
+            appData.jogos[currentPeriod][gameId] = {
+                ...existingMatchData,
+                team1,
+                team2,
+                gols1: parseInt(val1),
+                gols2: parseInt(val2)
+            };
+
+            if (appData.nextMatches?.[currentPeriod]?.gameId === gameId) {
+                appData.nextMatches[currentPeriod] = null;
             }
 
             saveStateToFirebase();
             renderAllViews();
+        }
+
+        function resetMatchScore(gameId) {
+            if (!isAdmin) return;
+            if (confirm("Deseja reabrir esta partida para alteração de placar?")) {
+                if (appData.jogos && appData.jogos[currentPeriod] && appData.jogos[currentPeriod][gameId]) {
+                    delete appData.jogos[currentPeriod][gameId].gols1;
+                    delete appData.jogos[currentPeriod][gameId].gols2;
+                }
+                saveStateToFirebase();
+                renderAllViews();
+            }
         }
 
         // =========================================================
@@ -1151,7 +1327,6 @@
             const newInMatch = Math.max(0, currentInMatch + amount);
             match.matchGols[playerId] = newInMatch;
 
-            // Recalcular total de gols do jogador no campeonato inteiro
             recalculatePlayerTotalGoals(playerId);
 
             saveStateToFirebase();
@@ -1190,7 +1365,7 @@
 
                     <div class="space-y-3">
                         <h4 class="font-bold text-pitch-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
-                            <span>${team1}</span>
+                            <span class="flex items-center gap-2">${renderTeamBadge(team1, "w-5 h-5")} ${team1}</span>
                         </h4>
                         ${t1Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
                             <div class="grid grid-cols-1 gap-2">
@@ -1218,7 +1393,7 @@
 
                     <div class="space-y-3">
                         <h4 class="font-bold text-orange-400 text-sm border-b border-slate-800 pb-2 flex items-center justify-between">
-                            <span>${team2}</span>
+                            <span class="flex items-center gap-2">${renderTeamBadge(team2, "w-5 h-5")} ${team2}</span>
                         </h4>
                         ${t2Players.length === 0 ? `<p class="text-xs text-slate-500 italic">Sem jogadores cadastrados nesta equipe.</p>` : `
                             <div class="grid grid-cols-1 gap-2">
@@ -1281,7 +1456,7 @@
                         <div class="bg-navy-900 rounded-2xl border ${colors[idx]} p-5 flex flex-col items-center text-center space-y-2">
                             <span class="text-xs font-extrabold uppercase tracking-wider text-gold-400">${medals[idx]}</span>
                             <h4 class="font-extrabold text-white text-lg">${p.nome}</h4>
-                            <p class="text-xs text-slate-300">${p.team} (${p.periodo === 'manha' ? 'Manhã' : 'Tarde'})</p>
+                            <p class="text-xs text-slate-300 flex items-center justify-center gap-1.5">${renderTeamBadge(p.team, "w-4 h-4")} ${p.team} (${p.periodo === 'manha' ? 'Manhã' : 'Tarde'})</p>
                             <span class="px-3 py-1 rounded-full text-xs font-black bg-pitch-500 text-navy-950">${p.gols || 0} Gols</span>
                         </div>
                     `;
@@ -1294,7 +1469,10 @@
                 <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
                     <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
                     <td class="py-3 px-4 font-bold text-white">${p.nome}</td>
-                    <td class="py-3 px-4 text-slate-300">${p.team}</td>
+                    <td class="py-3 px-4 text-slate-300 flex items-center gap-2">
+                        ${renderTeamBadge(p.team, "w-5 h-5")}
+                        <span>${p.team}</span>
+                    </td>
                     <td class="py-3 px-4 text-slate-400 capitalize">${p.periodo}</td>
                     <td class="py-3 px-4 text-center font-black text-gold-400 text-base">${p.gols || 0}</td>
                     <td class="py-3 px-4 text-right">
@@ -1318,8 +1496,28 @@
         }
 
         // =========================================================
-        // GESTÃO DE TIMES E ELENCOS
+        // GESTÃO DE TIMES, LOGOS E ELENCOS
         // =========================================================
+        function changeTeamLogo(teamName) {
+            if (!isAdmin) return;
+            const currentUrl = getTeamLogo(teamName) || "";
+            const newUrl = prompt(`Cole a URL da imagem do escudo do time "${teamName}":`, currentUrl);
+            
+            if (newUrl === null) return;
+
+            if (!appData.teamLogos) appData.teamLogos = {};
+
+            if (newUrl.trim() === "") {
+                delete appData.teamLogos[teamName];
+            } else {
+                appData.teamLogos[teamName] = newUrl.trim();
+            }
+
+            saveStateToFirebase();
+            populateHomeTeamBadges();
+            renderAllViews();
+        }
+
         function updateTeamDropdown() {
             const period = document.getElementById('new-player-period').value;
             const select = document.getElementById('new-player-team');
@@ -1339,6 +1537,11 @@
             const teamIndex = appData.teams[period].indexOf(oldName);
             if (teamIndex !== -1) {
                 appData.teams[period][teamIndex] = trimmedNewName;
+            }
+
+            if (appData.teamLogos && appData.teamLogos[oldName]) {
+                appData.teamLogos[trimmedNewName] = appData.teamLogos[oldName];
+                delete appData.teamLogos[oldName];
             }
 
             Object.values(appData.jogadores || {}).forEach(p => {
@@ -1439,10 +1642,14 @@
                         <div>
                             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                                 <div class="flex items-center gap-2">
+                                    ${renderTeamBadge(team, "w-7 h-7")}
                                     <h4 class="font-bold text-white text-base">${team}</h4>
                                     ${isAdmin ? `
                                         <button onclick="renameTeam('${period}', '${team}')" class="text-slate-400 hover:text-amber-400 p-1 text-xs" title="Editar nome do time">
                                             <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button onclick="changeTeamLogo('${team}')" class="text-slate-400 hover:text-gold-400 p-1 text-xs" title="Alterar Escudo do Time">
+                                            <i class="fa-solid fa-shield"></i>
                                         </button>
                                     ` : ''}
                                 </div>
@@ -1480,6 +1687,8 @@
             if (confirm("ATENÇÃO: Deseja apagar todos os placares, partidas e dados de artilharia?")) {
                 appData = {
                     teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+                    teamLogos: {},
+                    nextMatches: { manha: null, tarde: null },
                     jogos: { manha: {}, tarde: {} },
                     jogadores: {}
                 };
