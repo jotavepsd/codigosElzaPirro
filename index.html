@@ -138,7 +138,7 @@
                         <i class="fa-solid fa-cloud-sun text-orange-400"></i> Tarde (5 Times)
                     </button>
                     <button onclick="switchTab('artilharia')" id="nav-artilharia" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60">
-                        <i class="fa-solid fa-futbol text-gold-400"></i> Artilharia
+                        <i class="fa-solid fa-futbol text-gold-400"></i> Artilharia & Disciplina
                     </button>
                     <button onclick="switchTab('gestao')" id="nav-gestao" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60">
                         <i class="fa-solid fa-users-gear text-blue-400"></i> Times & Elencos
@@ -207,7 +207,7 @@
                 </div>
             </div>
 
-            <!-- DESTAQUE DOS ARTILHEIROS DA MANHÃ E TARDE -->
+            <!-- DESTAQUE DOS ARTILHEIROS POR PERÍODO -->
             <div id="home-top-scorers-section" class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
@@ -253,7 +253,7 @@
                 </div>
             </div>
 
-            <!-- ÚLTIMOS RESULTADOS DA ÚLTIMA PARTIDA -->
+            <!-- ÚLTIMOS RESULTADOS REGISTRADOS -->
             <div id="home-last-matches-section" class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
@@ -328,7 +328,7 @@
                         <i class="fa-solid fa-futbol"></i>
                     </div>
                     <div>
-                        <h4 class="text-white font-bold text-sm">Tabela de Artilharia</h4>
+                        <h4 class="text-white font-bold text-sm">Artilharia & Disciplina</h4>
                         <p class="text-xs text-slate-400" id="home-stat-artilheiro">Artilheiro: Carregando...</p>
                     </div>
                 </div>
@@ -406,6 +406,7 @@
                                     <th class="py-3.5 px-3 text-center">GP</th>
                                     <th class="py-3.5 px-3 text-center">GC</th>
                                     <th class="py-3.5 px-3 text-center font-semibold">SG</th>
+                                    <th class="py-3.5 px-4 text-center">Últimos 5 Jogos</th>
                                 </tr>
                             </thead>
                             <tbody id="table-standings-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
@@ -423,8 +424,9 @@
                             <span><strong class="text-slate-200">GC:</strong> Gols Sofridos</span>
                             <span><strong class="text-slate-200">SG:</strong> Saldo de Gols</span>
                         </div>
-                        <div class="text-emerald-400 font-semibold flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> 1º Lugar = Campeão
+                        <div class="flex items-center gap-3">
+                            <span class="text-emerald-400 font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> 1º Lugar = Campeão</span>
+                            <span class="text-slate-400">Forma: <span class="text-emerald-400">🟢V</span> <span class="text-amber-400">🟡E</span> <span class="text-red-400">🔴D</span></span>
                         </div>
                     </div>
                 </div>
@@ -443,14 +445,14 @@
             </div>
         </section>
 
-        <!-- ================= PAGE: ARTILHARIA ================= -->
-        <section id="page-artilharia" class="hidden space-y-6">
+        <!-- ================= PAGE: ARTILHARIA & DISCIPLINA ================= -->
+        <section id="page-artilharia" class="hidden space-y-8">
             <div class="bg-navy-900 p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-3">
-                        <i class="fa-solid fa-futbol text-gold-400"></i> Tabela de Artilharia
+                        <i class="fa-solid fa-futbol text-gold-400"></i> Artilharia & Disciplina
                     </h2>
-                    <p class="text-slate-400 text-sm">Ranking de gols marcados pelos atletas no campeonato</p>
+                    <p class="text-slate-400 text-sm">Ranking de goleadores e tabela disciplinar (Fair Play) do campeonato</p>
                 </div>
 
                 <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800">
@@ -460,12 +462,18 @@
                 </div>
             </div>
 
-            <!-- PÓDIO APENAS PARA OS 3 PRIMEIRA COLOCADOS -->
-            <div id="artilharia-podium" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+            <!-- PÓDIO (TOP 3) -->
+            <div class="space-y-3">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-medal text-gold-400"></i> Pódio de Artilheiros
+                </h3>
+                <div id="artilharia-podium" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+            </div>
 
+            <!-- TABELA GERAL DE GOLS -->
             <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-                <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm">
-                    Lista Geral de Goleadores
+                <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol text-pitch-500"></i> Lista Geral de Goleadores
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs sm:text-sm">
@@ -482,6 +490,28 @@
                             </tr>
                         </thead>
                         <tbody id="artilharia-table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABELA DISCIPLINAR / FAIR PLAY -->
+            <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-hand-shake text-blue-400"></i> Tabela Disciplinar (Fair Play - Cartões)
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-950 uppercase text-[11px] tracking-wider text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="py-3 px-4 text-center w-12">#</th>
+                                <th class="py-3 px-4">Jogador</th>
+                                <th class="py-3 px-4">Equipe</th>
+                                <th class="py-3 px-4">Período</th>
+                                <th class="py-3 px-4 text-center font-bold text-amber-400">Cartões Amarelos (🟨)</th>
+                                <th class="py-3 px-4 text-center font-bold text-red-400">Cartões Vermelhos (🟥)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disciplina-table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
                     </table>
                 </div>
             </div>
@@ -924,6 +954,9 @@
                 createScorerCard(topTarde, 'Artilharia Tarde', 'fa-solid fa-cloud-sun', 'bg-orange-500/10 text-orange-400');
         }
 
+        // =========================================================
+        // ÚLTIMO RESULTADO REGISTRADO
+        // =========================================================
         function renderLastMatchCards() {
             const container = document.getElementById('home-last-matches-cards');
             if (!container) return;
@@ -1194,41 +1227,54 @@
                     d: 0,
                     gp: 0,
                     gc: 0,
-                    sg: 0
+                    sg: 0,
+                    form: [] // Armazena histórico recente de resultados
                 };
             });
 
-            Object.values(games).forEach(game => {
-                if (game && game.gols1 !== undefined && game.gols2 !== undefined && game.gols1 !== "" && game.gols2 !== "") {
-                    const g1 = parseInt(game.gols1);
-                    const g2 = parseInt(game.gols2);
-                    const t1 = game.team1;
-                    const t2 = game.team2;
+            // Mapeia todas as partidas jogadas na ordem para extrair a forma recente
+            const rounds = generateRoundRobin(teams);
+            rounds.forEach(roundMatches => {
+                roundMatches.forEach(match => {
+                    const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
+                    const game = games[gameId];
+                    if (game && game.gols1 !== undefined && game.gols2 !== undefined && game.gols1 !== "" && game.gols2 !== "") {
+                        const g1 = parseInt(game.gols1);
+                        const g2 = parseInt(game.gols2);
+                        const t1 = match.team1;
+                        const t2 = match.team2;
 
-                    if (stats[t1] && stats[t2]) {
-                        stats[t1].j++;
-                        stats[t2].j++;
-                        stats[t1].gp += g1;
-                        stats[t1].gc += g2;
-                        stats[t2].gp += g2;
-                        stats[t2].gc += g1;
+                        if (stats[t1] && stats[t2]) {
+                            stats[t1].j++;
+                            stats[t2].j++;
+                            stats[t1].gp += g1;
+                            stats[t1].gc += g2;
+                            stats[t2].gp += g2;
+                            stats[t2].gc += g1;
 
-                        if (g1 > g2) {
-                            stats[t1].pts += 3;
-                            stats[t1].v++;
-                            stats[t2].d++;
-                        } else if (g2 > g1) {
-                            stats[t2].pts += 3;
-                            stats[t2].v++;
-                            stats[t1].d++;
-                        } else {
-                            stats[t1].pts += 1;
-                            stats[t2].pts += 1;
-                            stats[t1].e++;
-                            stats[t2].e++;
+                            if (g1 > g2) {
+                                stats[t1].pts += 3;
+                                stats[t1].v++;
+                                stats[t1].form.push('V');
+                                stats[t2].d++;
+                                stats[t2].form.push('D');
+                            } else if (g2 > g1) {
+                                stats[t2].pts += 3;
+                                stats[t2].v++;
+                                stats[t2].form.push('V');
+                                stats[t1].d++;
+                                stats[t1].form.push('D');
+                            } else {
+                                stats[t1].pts += 1;
+                                stats[t1].e++;
+                                stats[t1].form.push('E');
+                                stats[t2].pts += 1;
+                                stats[t2].e++;
+                                stats[t2].form.push('E');
+                            }
                         }
                     }
-                }
+                });
             });
 
             Object.keys(stats).forEach(t => {
@@ -1267,6 +1313,18 @@
                 const sgFormatted = item.sg > 0 ? `+${item.sg}` : item.sg;
                 const sgColor = item.sg > 0 ? "text-emerald-400" : (item.sg < 0 ? "text-red-400" : "text-slate-400");
 
+                // Renderiza os últimos 5 jogos (Forma Recente)
+                const last5 = item.form.slice(-5);
+                let formHtml = last5.map(res => {
+                    if (res === 'V') return `<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold" title="Vitória">V</span>`;
+                    if (res === 'E') return `<span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-bold" title="Empate">E</span>`;
+                    return `<span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center text-[10px] font-bold" title="Derrota">D</span>`;
+                }).join('');
+
+                if (last5.length === 0) {
+                    formHtml = `<span class="text-[10px] text-slate-500 italic">N/A</span>`;
+                }
+
                 return `
                     <tr class="${rowBg}">
                         <td class="py-3.5 px-3 sm:px-4 text-center">${posBadge}</td>
@@ -1282,6 +1340,7 @@
                         <td class="py-3.5 px-3 text-center text-slate-300">${item.gp}</td>
                         <td class="py-3.5 px-3 text-center text-slate-400">${item.gc}</td>
                         <td class="py-3.5 px-3 text-center font-bold ${sgColor}">${sgFormatted}</td>
+                        <td class="py-3.5 px-4 text-center"><div class="flex items-center justify-center gap-1">${formHtml}</div></td>
                     </tr>
                 `;
             }).join('');
@@ -1607,7 +1666,7 @@
         }
 
         // =========================================================
-        // PÓDIO DA ARTILHARIA LIMITADO AOS 3 PRIMEIRAS COLOCADOS
+        // ARTILHARIA E TABELA DISCIPLINAR
         // =========================================================
         function renderArtilharia(filter = 'todos') {
             currentArtilhariaFilter = filter;
@@ -1623,13 +1682,14 @@
                 players = players.filter(p => p.periodo === filter);
             }
 
-            players.sort((a, b) => (b.gols || 0) - (a.gols || 0));
+            // Ordenação para artilharia
+            let sortedByGoals = [...players].sort((a, b) => (b.gols || 0) - (a.gols || 0));
 
             const podiumContainer = document.getElementById('artilharia-podium');
             const tableBody = document.getElementById('artilharia-table-body');
+            const disciplinaBody = document.getElementById('disciplina-table-body');
 
-            // Apenas os 3 primeiros colocados com gols > 0
-            const top3 = players.filter(p => (p.gols || 0) > 0).slice(0, 3);
+            const top3 = sortedByGoals.filter(p => (p.gols || 0) > 0).slice(0, 3);
 
             if (top3.length > 0) {
                 podiumContainer.innerHTML = top3.map((p, idx) => {
@@ -1648,7 +1708,7 @@
                 podiumContainer.innerHTML = `<div class="col-span-3 text-center py-4 text-xs text-slate-500 italic">Nenhum gol registrado no ranking ainda.</div>`;
             }
 
-            tableBody.innerHTML = players.map((p, idx) => {
+            tableBody.innerHTML = sortedByGoals.map((p, idx) => {
                 const yellowCount = p.cartoes?.amarelo || 0;
                 const redCount = p.cartoes?.vermelho || 0;
 
@@ -1670,6 +1730,35 @@
                                 <button onclick="addGoalToPlayerManual('${p.id}', -1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold">-1</button>
                             ` : '<span class="text-xs text-slate-500 italic">Somente leitura</span>'}
                         </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Tabela Disciplinar: Ordena por cartões vermelhos (decrescente) e depois amarelos (decrescente)
+            let sortedByCards = [...players].sort((a, b) => {
+                const redA = a.cartoes?.vermelho || 0;
+                const redB = b.cartoes?.vermelho || 0;
+                if (redB !== redA) return redB - redA;
+                const yellowA = a.cartoes?.amarelo || 0;
+                const yellowB = b.cartoes?.amarelo || 0;
+                return yellowB - yellowA;
+            });
+
+            disciplinaBody.innerHTML = sortedByCards.map((p, idx) => {
+                const yellowCount = p.cartoes?.amarelo || 0;
+                const redCount = p.cartoes?.vermelho || 0;
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
+                        <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
+                        <td class="py-3 px-4 font-bold text-white">${p.nome}</td>
+                        <td class="py-3 px-4 text-slate-300 flex items-center gap-2">
+                            ${renderTeamBadge(p.team, "w-5 h-5")}
+                            <span>${p.team}</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-400 capitalize">${p.periodo}</td>
+                        <td class="py-3 px-4 text-center font-bold text-amber-400">${yellowCount}</td>
+                        <td class="py-3 px-4 text-center font-bold text-red-400">${redCount}</td>
                     </tr>
                 `;
             }).join('');
