@@ -191,7 +191,7 @@
                         <i class="fa-solid fa-circle-check"></i> Regulamento Brasileirão
                     </span>
                     <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                        Campeonato Interclasse de Futebol 2026 - Elza Pirro
+                        Campeonato Interclasse de Futebol 2026
                     </h2>
                     <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
                         Sistema em pontos corridos (todos contra todos). Vitória vale <strong>3 pontos</strong>, Empate vale <strong>1 ponto</strong> e Derrota <strong>0 pontos</strong>.
@@ -204,6 +204,19 @@
                             <i class="fa-solid fa-cloud-sun"></i> Ver Tabela da Tarde
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- DESTAQUE DOS ARTILHEIROS DA MANHÃ E TARDE -->
+            <div id="home-top-scorers-section" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-crown text-gold-400"></i> Destaque dos Artilheiros por Período
+                    </h3>
+                    <span class="text-xs text-slate-400">Líderes de gols da Manhã e da Tarde</span>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6" id="home-top-scorers-cards">
+                    <!-- Injetado Dinamicamente -->
                 </div>
             </div>
 
@@ -240,13 +253,13 @@
                 </div>
             </div>
 
-            <!-- ÚLTIMOS RESULTADOS (POSICIONADO LOGO ACIMA DAS PRÓXIMAS PARTIDAS) -->
+            <!-- ÚLTIMOS RESULTADOS DA ÚLTIMA PARTIDA -->
             <div id="home-last-matches-section" class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-pitch-400"></i> Último Jogo
+                        <i class="fa-solid fa-clock-rotate-left text-pitch-400"></i> Último Resultado Registrado
                     </h3>
-                    <span class="text-xs text-slate-400">Última partida realizada no período</span>
+                    <span class="text-xs text-slate-400">Última partida salva por período</span>
                 </div>
                 <div class="grid md:grid-cols-2 gap-6" id="home-last-matches-cards">
                     <!-- Injetado Dinamicamente -->
@@ -447,11 +460,12 @@
                 </div>
             </div>
 
+            <!-- PÓDIO APENAS PARA OS 3 PRIMEIRA COLOCADOS -->
             <div id="artilharia-podium" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
 
             <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
                 <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm">
-                    Lista Geral de Artilheiros
+                    Lista Geral de Goleadores
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs sm:text-sm">
@@ -845,8 +859,71 @@
         }
 
         // =========================================================
-        // RENDERING DOS ÚLTIMOS RESULTADOS (TELA INICIAL)
+        // DESTAQUE DE ARTILHEIROS POR PERÍODO (SUPORTA EMPATES)
         // =========================================================
+        function renderTopScorersCards() {
+            const container = document.getElementById('home-top-scorers-cards');
+            if (!container) return;
+
+            const getTopScorersByPeriod = (period) => {
+                const players = Object.values(appData.jogadores || {}).filter(p => p.periodo === period && (p.gols || 0) > 0);
+                if (players.length === 0) return [];
+                
+                players.sort((a, b) => b.gols - a.gols);
+                const maxGols = players[0].gols;
+                return players.filter(p => p.gols === maxGols);
+            };
+
+            const topManha = getTopScorersByPeriod('manha');
+            const topTarde = getTopScorersByPeriod('tarde');
+
+            const createScorerCard = (scorers, title, iconClass, colorTheme) => {
+                if (scorers.length === 0) {
+                    return `
+                        <div class="bg-navy-900/60 rounded-2xl p-5 border border-slate-800 flex flex-col justify-center items-center text-center space-y-2 min-h-[140px]">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">${title}</span>
+                            <i class="fa-solid fa-futbol text-xl text-slate-600"></i>
+                            <p class="text-xs text-slate-500 font-medium">Nenhum gol registrado neste período.</p>
+                        </div>
+                    `;
+                }
+
+                const isEmpate = scorers.length > 1;
+
+                return `
+                    <div class="bg-navy-900 rounded-2xl p-5 border border-slate-800 space-y-3 relative overflow-hidden shadow-lg flex flex-col justify-between">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase ${colorTheme} border border-current/20 flex items-center gap-1.5">
+                                <i class="${iconClass}"></i> ${title}
+                            </span>
+                            <span class="text-xs font-black text-gold-400 bg-gold-500/10 px-3 py-1 rounded-full border border-gold-500/20 flex items-center gap-1">
+                                <i class="fa-solid fa-fire text-amber-400"></i> ${scorers[0].gols} Gols ${isEmpate ? '(Empate)' : ''}
+                            </span>
+                        </div>
+
+                        <div class="space-y-2 py-1">
+                            ${scorers.map(p => `
+                                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <div class="flex items-center gap-2.5">
+                                        ${renderTeamBadge(p.team, "w-7 h-7")}
+                                        <div>
+                                            <h4 class="font-extrabold text-white text-sm leading-tight">${p.nome}</h4>
+                                            <span class="text-[11px] text-slate-400 font-medium">${p.team}</span>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-crown text-gold-400 text-sm"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            };
+
+            container.innerHTML = 
+                createScorerCard(topManha, 'Artilharia Manhã', 'fa-solid fa-sun', 'bg-amber-500/10 text-amber-400') +
+                createScorerCard(topTarde, 'Artilharia Tarde', 'fa-solid fa-cloud-sun', 'bg-orange-500/10 text-orange-400');
+        }
+
         function renderLastMatchCards() {
             const container = document.getElementById('home-last-matches-cards');
             if (!container) return;
@@ -858,7 +935,6 @@
                 
                 let lastPlayed = null;
 
-                // Percorre os jogos na ordem das rodadas para pegar o último realizado
                 rounds.forEach(roundMatches => {
                     roundMatches.forEach(match => {
                         const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
@@ -1034,6 +1110,7 @@
                 `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">${renderTeamBadge(t, "w-4 h-4")} ${t}</span>`
             ).join('');
 
+            renderTopScorersCards();
             renderLastMatchCards();
             renderNextMatchCards();
         }
@@ -1466,7 +1543,7 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white text-sm">${p.nome}</span>
-                            <span class="text-[10px] text-slate-400">Total: ${p.gols || 0} Gol(s)</span>
+                            <span class="text-[10px] text-slate-400">Total: ${p.gols || 0} Golaço(s)</span>
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900">
                             <!-- Gols -->
@@ -1529,6 +1606,9 @@
             document.getElementById('modal-match-goals').classList.add('hidden');
         }
 
+        // =========================================================
+        // PÓDIO DA ARTILHARIA LIMITADO AOS 3 PRIMEIRAS COLOCADOS
+        // =========================================================
         function renderArtilharia(filter = 'todos') {
             currentArtilhariaFilter = filter;
             ['todos', 'manha', 'tarde'].forEach(f => {
@@ -1548,8 +1628,10 @@
             const podiumContainer = document.getElementById('artilharia-podium');
             const tableBody = document.getElementById('artilharia-table-body');
 
-            const top3 = players.slice(0, 3);
-            if (top3.length > 0 && top3[0].gols > 0) {
+            // Apenas os 3 primeiros colocados com gols > 0
+            const top3 = players.filter(p => (p.gols || 0) > 0).slice(0, 3);
+
+            if (top3.length > 0) {
                 podiumContainer.innerHTML = top3.map((p, idx) => {
                     const medals = ['🥇 1º Lugar', '🥈 2º Lugar', '🥉 3º Lugar'];
                     const colors = ['border-gold-500/50 bg-gold-500/10', 'border-slate-400/50 bg-slate-400/10', 'border-amber-700/50 bg-amber-700/10'];
