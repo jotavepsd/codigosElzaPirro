@@ -191,7 +191,7 @@
                         <i class="fa-solid fa-circle-check"></i> Regulamento Brasileirão
                     </span>
                     <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                        Campeonato Interclasse de Futebol 2026
+                        Campeonato Interclasse de Futebol 2026 - Elza Pirro
                     </h2>
                     <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
                         Sistema em pontos corridos (todos contra todos). Vitória vale <strong>3 pontos</strong>, Empate vale <strong>1 ponto</strong> e Derrota <strong>0 pontos</strong>.
@@ -237,6 +237,19 @@
                         <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Média de Gols/Jogo</span>
                         <h4 class="text-white font-black text-2xl" id="stat-media-gols">0.0</h4>
                     </div>
+                </div>
+            </div>
+
+            <!-- ÚLTIMOS RESULTADOS (POSICIONADO LOGO ACIMA DAS PRÓXIMAS PARTIDAS) -->
+            <div id="home-last-matches-section" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-pitch-400"></i> Último Jogo
+                    </h3>
+                    <span class="text-xs text-slate-400">Última partida realizada no período</span>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6" id="home-last-matches-cards">
+                    <!-- Injetado Dinamicamente -->
                 </div>
             </div>
 
@@ -438,7 +451,7 @@
 
             <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
                 <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm">
-                    Lista Geral de Goladores
+                    Lista Geral de Artilheiros
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs sm:text-sm">
@@ -831,6 +844,85 @@
             }
         }
 
+        // =========================================================
+        // RENDERING DOS ÚLTIMOS RESULTADOS (TELA INICIAL)
+        // =========================================================
+        function renderLastMatchCards() {
+            const container = document.getElementById('home-last-matches-cards');
+            if (!container) return;
+
+            const getLastPlayedMatch = (period) => {
+                const teams = getTeams(period);
+                const rounds = generateRoundRobin(teams);
+                const games = appData.jogos?.[period] || {};
+                
+                let lastPlayed = null;
+
+                // Percorre os jogos na ordem das rodadas para pegar o último realizado
+                rounds.forEach(roundMatches => {
+                    roundMatches.forEach(match => {
+                        const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
+                        const g = games[gameId];
+                        if (g && g.gols1 !== undefined && g.gols2 !== undefined && g.gols1 !== "" && g.gols2 !== "") {
+                            lastPlayed = g;
+                        }
+                    });
+                });
+
+                return lastPlayed;
+            };
+
+            const lastManha = getLastPlayedMatch('manha');
+            const lastTarde = getLastPlayedMatch('tarde');
+
+            const createLastCard = (data, title, iconClass, colorTheme) => {
+                if (!data) {
+                    return `
+                        <div class="bg-navy-900/60 rounded-2xl p-5 border border-slate-800/80 flex flex-col justify-center items-center text-center space-y-1.5 min-h-[140px]">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">${title}</span>
+                            <i class="fa-solid fa-clipboard-question text-xl text-slate-600 mt-1"></i>
+                            <p class="text-xs text-slate-500 font-medium">Nenhuma partida finalizada ainda.</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-navy-900 rounded-2xl p-5 border border-slate-800 space-y-3 relative overflow-hidden shadow-lg">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase ${colorTheme} border border-current/20 flex items-center gap-1.5">
+                                <i class="${iconClass}"></i> ${title}
+                            </span>
+                            <span class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> Finalizado
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 py-1">
+                            <div class="flex items-center justify-end gap-2.5 w-5/12 text-right">
+                                <span class="font-bold text-xs sm:text-sm text-white truncate">${data.team1}</span>
+                                ${renderTeamBadge(data.team1, "w-8 h-8")}
+                            </div>
+
+                            <div class="w-2/12 flex items-center justify-center gap-1.5 px-2 py-1 bg-slate-950 rounded-lg border border-slate-800 font-black text-sm text-gold-400">
+                                <span>${data.gols1}</span>
+                                <span class="text-slate-600 text-[10px]">-</span>
+                                <span>${data.gols2}</span>
+                            </div>
+
+                            <div class="flex items-center justify-start gap-2.5 w-5/12 text-left">
+                                ${renderTeamBadge(data.team2, "w-8 h-8")}
+                                <span class="font-bold text-xs sm:text-sm text-white truncate">${data.team2}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            container.innerHTML = 
+                createLastCard(lastManha, 'Manhã', 'fa-solid fa-sun', 'bg-amber-500/10 text-amber-400') +
+                createLastCard(lastTarde, 'Tarde', 'fa-solid fa-cloud-sun', 'bg-orange-500/10 text-orange-400');
+        }
+
         function renderNextMatchCards() {
             const container = document.getElementById('home-next-matches-cards');
             if (!container) return;
@@ -942,6 +1034,7 @@
                 `<span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">${renderTeamBadge(t, "w-4 h-4")} ${t}</span>`
             ).join('');
 
+            renderLastMatchCards();
             renderNextMatchCards();
         }
 
@@ -957,7 +1050,6 @@
             const totalPlayers = Object.keys(appData.jogadores || {}).length;
             document.getElementById('home-stat-jogadores').textContent = `${totalPlayers} atletas cadastrados nos elencos`;
 
-            // Calcular Estatísticas Gerais do Torneio
             let totalGols = 0;
             let totalJogosRealizados = 0;
 
@@ -1374,7 +1466,7 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white text-sm">${p.nome}</span>
-                            <span class="text-[10px] text-slate-400">Total: ${p.gols || 0} Golaço(s)</span>
+                            <span class="text-[10px] text-slate-400">Total: ${p.gols || 0} Gol(s)</span>
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900">
                             <!-- Gols -->
