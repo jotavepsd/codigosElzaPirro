@@ -2101,15 +2101,19 @@
                 return `
                     <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
                         <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
-                        <td class="py-3 px-4 font-bold text-white flex items-center gap-2">
-                            <button onclick="toggleFavoritePlayer('${p.id}', event)" class="${isFav ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-xs">
-                                <i class="fa-solid fa-star"></i>
-                            </button>
-                            <span>${p.nome}</span>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2.5">
+                                <button onclick="toggleFavoritePlayer('${p.id}', event)" class="${isFav ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-xs">
+                                    <i class="fa-solid fa-star"></i>
+                                </button>
+                                <span class="font-bold text-white text-sm">${p.nome}</span>
+                            </div>
                         </td>
-                        <td class="py-3 px-4 text-slate-300 flex items-center gap-2">
-                            ${renderTeamBadge(p.team, "w-5 h-5")}
-                            <span>${p.team}</span>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2 text-slate-300 font-medium">
+                                ${renderTeamBadge(p.team, "w-6 h-6")}
+                                <span>${p.team}</span>
+                            </div>
                         </td>
                         <td class="py-3 px-4 text-slate-400 capitalize">${p.periodo}</td>
                         <td class="py-3 px-4 text-center font-black text-gold-400 text-base">${p.gols || 0}</td>
@@ -2118,6 +2122,37 @@
                     </tr>
                 `;
             }).join('');
+
+            let sortedByCards = [...players].sort((a, b) => {
+                const redA = a.cartoes?.vermelho || 0;
+                const redB = b.cartoes?.vermelho || 0;
+                if (redB !== redA) return redB - redA;
+                const yellowA = a.cartoes?.amarelo || 0;
+                const yellowB = b.cartoes?.amarelo || 0;
+                return yellowB - yellowA;
+            });
+
+            disciplinaBody.innerHTML = sortedByCards.map((p, idx) => {
+                const yellowCount = p.cartoes?.amarelo || 0;
+                const redCount = p.cartoes?.vermelho || 0;
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
+                        <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
+                        <td class="py-3 px-4 font-bold text-white">${p.nome}</td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2 text-slate-300 font-medium">
+                                ${renderTeamBadge(p.team, "w-6 h-6")}
+                                <span>${p.team}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-400 capitalize">${p.periodo}</td>
+                        <td class="py-3 px-4 text-center font-bold text-amber-400">${yellowCount}</td>
+                        <td class="py-3 px-4 text-center font-bold text-red-400">${redCount}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
             let sortedByCards = [...players].sort((a, b) => {
                 const redA = a.cartoes?.vermelho || 0;
