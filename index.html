@@ -538,8 +538,11 @@
 
             <!-- TABELA GERAL DE GOLS -->
             <div class="bg-navy-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-                <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-list-ol text-pitch-500"></i> Lista Geral de Goleadores
+                <div class="p-4 sm:p-5 border-b border-slate-800 font-bold text-white text-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-pitch-500"></i> Lista Geral de Goleadores
+                    </div>
+                    <span class="text-xs text-slate-400 font-normal"><i class="fa-solid fa-lock text-slate-500"></i> Gols somados automaticamente pelas súmulas</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs sm:text-sm">
@@ -552,7 +555,6 @@
                                 <th class="py-3 px-4 text-center font-bold text-gold-400">Gols</th>
                                 <th class="py-3 px-4 text-center text-amber-400">🟨</th>
                                 <th class="py-3 px-4 text-center text-red-400">🟥</th>
-                                <th class="py-3 px-4 text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="artilharia-table-body" class="divide-y divide-slate-800/60 font-medium"></tbody>
@@ -1229,7 +1231,7 @@
             const createScorerCard = (scorers, title, iconClass, colorTheme) => {
                 if (scorers.length === 0) {
                     return `
-                        <div class="bg-navy-900/60 rounded-2xl p-5 border border-slate-800 flex flex-col justify-center items-center text-center space-y-2 min-h-[140px]">
+                        <div class="bg-navy-900 rounded-2xl p-5 border border-slate-800 flex flex-col justify-center items-center text-center space-y-2 min-h-[140px]">
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">${title}</span>
                             <i class="fa-solid fa-futbol text-xl text-slate-600"></i>
                             <p class="text-xs text-slate-500 font-medium">Nenhum gol registrado neste período.</p>
@@ -1240,9 +1242,9 @@
                 const isEmpate = scorers.length > 1;
 
                 return `
-                    <div class="bg-navy-900 rounded-2xl p-5 border border-slate-800 space-y-3 relative overflow-hidden shadow-lg flex flex-col justify-between">
-                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-                            <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase ${colorTheme} border border-current/20 flex items-center gap-1.5">
+                    <div class="bg-navy-900 rounded-2xl p-5 border border-slate-800 space-y-4 shadow-lg">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase ${colorTheme} border border-current/20 flex items-center gap-1.5">
                                 <i class="${iconClass}"></i> ${title}
                             </span>
                             <span class="text-xs font-black text-gold-400 bg-gold-500/10 px-3 py-1 rounded-full border border-gold-500/20 flex items-center gap-1">
@@ -1250,11 +1252,11 @@
                             </span>
                         </div>
 
-                        <div class="space-y-2 py-1">
+                        <div class="space-y-2">
                             ${scorers.map(p => `
-                                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
                                     <div class="flex items-center gap-2.5">
-                                        ${renderTeamBadge(p.team, "w-7 h-7")}
+                                        ${renderTeamBadge(p.team, "w-8 h-8")}
                                         <div>
                                             <h4 class="font-extrabold text-white text-sm leading-tight">${p.nome}</h4>
                                             <span class="text-[11px] text-slate-400 font-medium">${p.team}</span>
@@ -2050,7 +2052,7 @@
         }
 
         // =========================================================
-        // ARTILHARIA E TABELA DISCIPLINAR
+        // ARTILHARIA E TABELA DISCIPLINAR (SOMENTE LEITURA NOS GOLS)
         // =========================================================
         function renderArtilharia(filter = 'todos') {
             currentArtilhariaFilter = filter;
@@ -2113,12 +2115,6 @@
                         <td class="py-3 px-4 text-center font-black text-gold-400 text-base">${p.gols || 0}</td>
                         <td class="py-3 px-4 text-center font-bold text-amber-400">${yellowCount}</td>
                         <td class="py-3 px-4 text-center font-bold text-red-400">${redCount}</td>
-                        <td class="py-3 px-4 text-right">
-                            ${isAdmin ? `
-                                <button onclick="addGoalToPlayerManual('${p.id}', 1)" class="px-2 py-1 bg-pitch-600 hover:bg-pitch-500 text-white rounded text-xs font-bold mr-1">+1 Gol</button>
-                                <button onclick="addGoalToPlayerManual('${p.id}', -1)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold">-1</button>
-                            ` : '<span class="text-xs text-slate-500 italic">Somente leitura</span>'}
-                        </td>
                     </tr>
                 `;
             }).join('');
@@ -2150,16 +2146,6 @@
                     </tr>
                 `;
             }).join('');
-        }
-
-        function addGoalToPlayerManual(playerId, amount) {
-            if (!isAdmin) return;
-            if (appData.jogadores && appData.jogadores[playerId]) {
-                const current = appData.jogadores[playerId].gols || 0;
-                appData.jogadores[playerId].gols = Math.max(0, current + amount);
-                saveStateToFirebase();
-                renderAllViews();
-            }
         }
 
         function changeTeamLogo(teamName) {
