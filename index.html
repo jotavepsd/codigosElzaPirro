@@ -75,6 +75,43 @@
 </head>
 <body class="bg-navy-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-pitch-500 selection:text-navy-950">
 
+    <!-- MODAL: AVISO EXPLICATIVO DE FAVORITOS (BOAS-VINDAS) -->
+    <div id="favoritos-intro-modal" class="fixed inset-0 z-50 bg-navy-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-navy-900 border border-gold-500/30 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-left space-y-5 relative overflow-hidden">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-gold-400 flex items-center justify-center text-2xl font-black shrink-0">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-white">⭐ Novo recurso: Favoritos na Liga Interclasse!</h3>
+                    <p class="text-xs text-slate-400">Acompanhe de perto quem mais importa para você</p>
+                </div>
+            </div>
+
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Agora você pode favoritar o time ou o atleta do seu filho para acompanhar o desempenho e os jogos em tempo real!
+            </p>
+
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs text-slate-300">
+                <p class="font-bold text-gold-400 uppercase tracking-wider text-[11px]"><i class="fa-solid fa-circle-info"></i> Como favoritar?</p>
+                <ol class="list-decimal list-inside space-y-1 text-slate-400 font-medium">
+                    <li>Navegue até a aba <strong class="text-white">"Manhã"</strong>, <strong class="text-white">"Tarde"</strong> ou <strong class="text-white">"Elencos"</strong>.</li>
+                    <li>Clique no ícone de estrela (<i class="fa-solid fa-star text-gold-400"></i>) ao lado do time ou jogador.</li>
+                    <li>Os dados do seu filho e da equipe aparecerão em destaque no topo da tela inicial sempre que você abrir o site.</li>
+                </ol>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                <button onclick="closeFavoritosIntro(true)" class="w-full sm:w-1/2 py-3 bg-gold-500 hover:bg-gold-400 text-navy-950 font-extrabold text-xs rounded-xl transition-all shadow-lg shadow-gold-500/20">
+                    Não mostrar novamente
+                </button>
+                <button onclick="closeFavoritosIntro(false)" class="w-full sm:w-1/2 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all border border-slate-700">
+                    Entendi / Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCREEN: AUTH MODAL / LOGIN SELECTION -->
     <div id="auth-screen" class="fixed inset-0 z-50 bg-navy-950/95 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-navy-900 border border-slate-800 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl text-center space-y-6">
@@ -180,6 +217,22 @@
     <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
+        <!-- BANNER DE ALERTA DE NOVIDADES DE FAVORITOS (Oculto por padrão) -->
+        <div id="favorito-update-toast" class="hidden mb-6 bg-gradient-to-r from-amber-500/20 to-gold-500/20 border border-gold-500/40 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gold-500 text-navy-950 font-black flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-white text-sm">Atualização do Seu Favorito!</h4>
+                    <p class="text-xs text-slate-300" id="favorito-toast-text">Seu time ou jogador favorito possui novos resultados registrados.</p>
+                </div>
+            </div>
+            <button onclick="document.getElementById('favorito-update-toast').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs p-2">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
         <!-- ================= PAGE: HOME ================= -->
         <section id="page-home" class="space-y-8">
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-900 via-slate-900 to-pitch-900/60 p-6 sm:p-10 border border-slate-800 shadow-2xl">
@@ -204,6 +257,19 @@
                             <i class="fa-solid fa-cloud-sun"></i> Ver Tabela da Tarde
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO DEDICADA DE FAVORITOS (Injetada Dinamicamente se houver) -->
+            <div id="home-favoritos-section" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-star text-gold-400"></i> Meus Favoritos
+                    </h3>
+                    <span class="text-xs text-slate-400">Acompanhamento personalizado em tempo real</span>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6" id="home-favoritos-cards">
+                    <!-- Cards de Favoritos Injetados Aqui -->
                 </div>
             </div>
 
@@ -624,6 +690,12 @@
         let isFirebaseOnline = false;
         let isAdmin = false;
 
+        // ESTRUTURA DE FAVORITOS (Salva no localStorage do navegador do usuário)
+        let userFavorites = {
+            teams: JSON.parse(localStorage.getItem('fav_teams') || '[]'),
+            players: JSON.parse(localStorage.getItem('fav_players') || '[]')
+        };
+
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.database();
@@ -632,10 +704,51 @@
             console.warn("Firebase fallback:", e);
         }
 
+        // =========================================================
+        // LÓGICA DE MANTER SESSÃO ATIVA & BOAS-VINDAS
+        // =========================================================
+        function checkSavedSession() {
+            const savedRole = localStorage.getItem('user_role');
+            const savedTime = localStorage.getItem('login_timestamp');
+
+            if (savedRole && savedTime) {
+                const hoursPassed = (Date.now() - parseInt(savedTime)) / (1000 * 60 * 60);
+                if (hoursPassed < 12) { // Sessão válida por 12 horas
+                    isAdmin = (savedRole === 'admin');
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    updateRoleBadgeUI();
+                    checkFavoritosIntroModal();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkFavoritosIntroModal() {
+            const hideIntro = localStorage.getItem('hide_favoritos_intro');
+            if (!hideIntro) {
+                document.getElementById('favoritos-intro-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeFavoritosIntro(neverShowAgain) {
+            if (neverShowAgain) {
+                localStorage.setItem('hide_favoritos_intro', 'true');
+            }
+            document.getElementById('favoritos-intro-modal').classList.add('hidden');
+        }
+
+        function setSession(role) {
+            localStorage.setItem('user_role', role);
+            localStorage.setItem('login_timestamp', Date.now().toString());
+        }
+
         function loginAsGuest() {
             isAdmin = false;
+            setSession('guest');
             document.getElementById('auth-screen').classList.add('hidden');
             updateRoleBadgeUI();
+            checkFavoritosIntroModal();
             renderAllViews();
         }
 
@@ -649,9 +762,11 @@
             
             if (pass === ADMIN_PASSWORD) {
                 isAdmin = true;
+                setSession('admin');
                 errEl.classList.add('hidden');
                 document.getElementById('auth-screen').classList.add('hidden');
                 updateRoleBadgeUI();
+                checkFavoritosIntroModal();
                 renderAllViews();
             } else {
                 errEl.classList.remove('hidden');
@@ -659,6 +774,8 @@
         }
 
         function logoutRole() {
+            localStorage.removeItem('user_role');
+            localStorage.removeItem('login_timestamp');
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('admin-password-input').value = "";
             document.getElementById('admin-pass-box').classList.add('hidden');
@@ -684,6 +801,41 @@
                 if (addBox) addBox.classList.add('hidden');
                 if (elencosWrapper) elencosWrapper.className = "lg:col-span-3 space-y-6";
             }
+        }
+
+        // =========================================================
+        // LÓGICA DE FAVORITAR (TIMES E JOGADORES)
+        // =========================================================
+        function toggleFavoriteTeam(teamName, event) {
+            if(event) event.stopPropagation();
+            const idx = userFavorites.teams.indexOf(teamName);
+            if (idx === -1) {
+                userFavorites.teams.push(teamName);
+            } else {
+                userFavorites.teams.splice(idx, 1);
+            }
+            localStorage.setItem('fav_teams', JSON.stringify(userFavorites.teams));
+            renderAllViews();
+        }
+
+        function toggleFavoritePlayer(playerId, event) {
+            if(event) event.stopPropagation();
+            const idx = userFavorites.players.indexOf(playerId);
+            if (idx === -1) {
+                userFavorites.players.push(playerId);
+            } else {
+                userFavorites.players.splice(idx, 1);
+            }
+            localStorage.setItem('fav_players', JSON.stringify(userFavorites.players));
+            renderAllViews();
+        }
+
+        function isTeamFavorite(teamName) {
+            return userFavorites.teams.includes(teamName);
+        }
+
+        function isPlayerFavorite(playerId) {
+            return userFavorites.players.includes(playerId);
         }
 
         const DEFAULT_TEAMS = {
@@ -779,10 +931,10 @@
         }
 
         window.onload = function() {
+            checkSavedSession();
             initFirebaseListener();
             populateHomeTeamBadges();
             updateTeamDropdown();
-            updateRoleBadgeUI();
         };
 
         function initFirebaseListener() {
@@ -876,6 +1028,7 @@
         function renderAllViews() {
             updateHomeStats();
             populateHomeTeamBadges();
+            renderFavoritosSection();
             if (!document.getElementById('page-championship').classList.contains('hidden')) {
                 renderChampionshipHeader();
                 renderChampionshipView();
@@ -886,6 +1039,132 @@
             if (!document.getElementById('page-gestao').classList.contains('hidden')) {
                 renderElencos(currentElencoPeriod);
             }
+        }
+
+        // =========================================================
+        // SEÇÃO DE FAVORITOS NA PAINEL INICIAL
+        // =========================================================
+        function renderFavoritosSection() {
+            const section = document.getElementById('home-favoritos-section');
+            const container = document.getElementById('home-favoritos-cards');
+            if (!section || !container) return;
+
+            const favTeams = userFavorites.teams || [];
+            const favPlayers = userFavorites.players || [];
+
+            if (favTeams.length === 0 && favPlayers.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            let html = "";
+
+            // CARDS PARA TIMES FAVORITOS
+            favTeams.forEach(teamName => {
+                // Descobre o período do time
+                let period = 'manha';
+                if (DEFAULT_TEAMS.tarde.includes(teamName) || appData.teams?.tarde?.includes(teamName)) {
+                    period = 'tarde';
+                }
+
+                // Busca o último jogo jogado deste time
+                const games = appData.jogos?.[period] || {};
+                const playedGames = Object.values(games).filter(g => 
+                    g && (g.team1 === teamName || g.team2 === teamName) && 
+                    g.gols1 !== undefined && g.gols2 !== undefined && g.gols1 !== "" && g.gols2 !== ""
+                );
+
+                playedGames.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                const lastGame = playedGames[0];
+
+                html += `
+                    <div class="bg-navy-900 rounded-2xl p-5 border border-gold-500/40 space-y-3 relative overflow-hidden shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <div class="flex items-center gap-2">
+                                ${renderTeamBadge(teamName, "w-6 h-6")}
+                                <h4 class="font-bold text-white text-base">${teamName}</h4>
+                                <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 capitalize">${period}</span>
+                            </div>
+                            <button onclick="toggleFavoriteTeam('${teamName}', event)" class="text-gold-400 hover:text-slate-400 text-sm">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                        </div>
+
+                        ${lastGame ? `
+                            <div class="text-xs space-y-1">
+                                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Última Partida:</span>
+                                <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                    <span class="font-bold text-slate-200">${lastGame.team1}</span>
+                                    <span class="font-black text-gold-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-700">${lastGame.gols1} x ${lastGame.gols2}</span>
+                                    <span class="font-bold text-slate-200">${lastGame.team2}</span>
+                                </div>
+                            </div>
+                        ` : `
+                            <p class="text-xs text-slate-500 italic">Nenhum resultado registrado para este time ainda.</p>
+                        `}
+                    </div>
+                `;
+            });
+
+            // CARDS PARA JOGADORES FAVORITOS
+            favPlayers.forEach(playerId => {
+                const player = appData.jogadores?.[playerId];
+                if (!player) return;
+
+                const games = appData.jogos?.[player.periodo] || {};
+                const playedGames = Object.values(games).filter(g => 
+                    g && (g.team1 === player.team || g.team2 === player.team) && 
+                    g.gols1 !== undefined && g.gols2 !== undefined && g.gols1 !== "" && g.gols2 !== ""
+                );
+
+                playedGames.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                const lastGame = playedGames[0];
+                const goalsInLastMatch = lastGame?.matchGols?.[playerId] || 0;
+
+                html += `
+                    <div class="bg-navy-900 rounded-2xl p-5 border border-gold-500/40 space-y-3 relative overflow-hidden shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <div class="flex items-center gap-2.5">
+                                ${renderTeamBadge(player.team, "w-7 h-7")}
+                                <div>
+                                    <h4 class="font-extrabold text-white text-base leading-tight">${player.nome}</h4>
+                                    <span class="text-[11px] text-slate-400 font-medium">${player.team} (${player.periodo})</span>
+                                </div>
+                            </div>
+                            <button onclick="toggleFavoritePlayer('${player.id}', event)" class="text-gold-400 hover:text-slate-400 text-sm">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                <span class="block text-[10px] text-slate-400 font-semibold uppercase">Gols</span>
+                                <span class="font-black text-gold-400 text-sm">${player.gols || 0}</span>
+                            </div>
+                            <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                <span class="block text-[10px] text-amber-400 font-semibold uppercase">Amarelos</span>
+                                <span class="font-bold text-amber-400 text-sm">${player.cartoes?.amarelo || 0}</span>
+                            </div>
+                            <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                                <span class="block text-[10px] text-red-400 font-semibold uppercase">Vermelhos</span>
+                                <span class="font-bold text-red-400 text-sm">${player.cartoes?.vermelho || 0}</span>
+                            </div>
+                        </div>
+
+                        ${lastGame ? `
+                            <div class="text-xs pt-1 border-t border-slate-800 flex items-center justify-between">
+                                <span class="text-slate-400">Último Jogo: <strong class="text-white">${lastGame.gols1} x ${lastGame.gols2}</strong></span>
+                                ${goalsInLastMatch > 0 ? `
+                                    <span class="text-[10px] font-extrabold text-pitch-400 bg-pitch-500/10 px-2 py-0.5 rounded border border-pitch-500/20">⚽ Fez ${goalsInLastMatch} gol(s)!</span>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
         }
 
         // =========================================================
@@ -941,7 +1220,12 @@
                                             <span class="text-[11px] text-slate-400 font-medium">${p.team}</span>
                                         </div>
                                     </div>
-                                    <i class="fa-solid fa-crown text-gold-400 text-sm"></i>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="toggleFavoritePlayer('${p.id}', event)" class="${isPlayerFavorite(p.id) ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-xs">
+                                            <i class="fa-solid fa-star"></i>
+                                        </button>
+                                        <i class="fa-solid fa-crown text-gold-400 text-sm"></i>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -1317,10 +1601,15 @@
                     formHtml = `<span class="text-[10px] text-slate-500 italic">N/A</span>`;
                 }
 
+                const isFav = isTeamFavorite(item.nome);
+
                 return `
                     <tr class="${rowBg}">
                         <td class="py-3.5 px-3 sm:px-4 text-center">${posBadge}</td>
                         <td class="py-3.5 px-4 font-bold text-white flex items-center gap-2.5">
+                            <button onclick="toggleFavoriteTeam('${item.nome}', event)" class="${isFav ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-xs">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
                             ${renderTeamBadge(item.nome, "w-6 h-6")}
                             <span>${item.nome}</span>
                         </td>
@@ -1707,11 +1996,17 @@
             tableBody.innerHTML = sortedByGoals.map((p, idx) => {
                 const yellowCount = p.cartoes?.amarelo || 0;
                 const redCount = p.cartoes?.vermelho || 0;
+                const isFav = isPlayerFavorite(p.id);
 
                 return `
                     <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800/40">
                         <td class="py-3 px-4 text-center font-bold text-slate-400">${idx + 1}º</td>
-                        <td class="py-3 px-4 font-bold text-white">${p.nome}</td>
+                        <td class="py-3 px-4 font-bold text-white flex items-center gap-2">
+                            <button onclick="toggleFavoritePlayer('${p.id}', event)" class="${isFav ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-xs">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                            <span>${p.nome}</span>
+                        </td>
                         <td class="py-3 px-4 text-slate-300 flex items-center gap-2">
                             ${renderTeamBadge(p.team, "w-5 h-5")}
                             <span>${p.team}</span>
@@ -1908,12 +2203,16 @@
 
             container.innerHTML = teams.map(team => {
                 const players = getPlayersByTeamAndPeriod(team, period);
+                const isFavTeam = isTeamFavorite(team);
 
                 return `
                     <div class="bg-navy-900 rounded-2xl border border-slate-800 p-5 space-y-3 flex flex-col justify-between shadow-lg">
                         <div>
                             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
                                 <div class="flex items-center gap-2">
+                                    <button onclick="toggleFavoriteTeam('${team}', event)" class="${isFavTeam ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-xs">
+                                        <i class="fa-solid fa-star"></i>
+                                    </button>
                                     ${renderTeamBadge(team, "w-7 h-7")}
                                     <h4 class="font-bold text-white text-base">${team}</h4>
                                     ${isAdmin ? `
@@ -1931,21 +2230,29 @@
                             <div class="pt-3 space-y-1.5">
                                 ${players.length === 0 ? `
                                     <p class="text-xs text-slate-500 italic">Nenhum atleta cadastrado ainda.</p>
-                                ` : players.map(p => `
-                                    <div class="flex items-center justify-between text-xs py-1 border-b border-slate-800/40">
-                                        <span class="text-slate-200 font-medium">${p.nome}</span>
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-gold-400 font-bold">${p.gols || 0} Gols</span>
-                                            <span class="text-amber-400 font-bold">🟨 ${p.cartoes?.amarelo || 0}</span>
-                                            <span class="text-red-400 font-bold">🟥 ${p.cartoes?.vermelho || 0}</span>
-                                            ${isAdmin ? `
-                                                <button onclick="removePlayer('${p.id}')" class="text-red-400 hover:text-red-300 ml-1">
-                                                    <i class="fa-solid fa-xmark"></i>
+                                ` : players.map(p => {
+                                    const isFavP = isPlayerFavorite(p.id);
+                                    return `
+                                        <div class="flex items-center justify-between text-xs py-1 border-b border-slate-800/40">
+                                            <div class="flex items-center gap-2">
+                                                <button onclick="toggleFavoritePlayer('${p.id}', event)" class="${isFavP ? 'text-gold-400' : 'text-slate-600 hover:text-gold-400'} text-[10px]">
+                                                    <i class="fa-solid fa-star"></i>
                                                 </button>
-                                            ` : ''}
+                                                <span class="text-slate-200 font-medium">${p.nome}</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-gold-400 font-bold">${p.gols || 0} Gols</span>
+                                                <span class="text-amber-400 font-bold">🟨 ${p.cartoes?.amarelo || 0}</span>
+                                                <span class="text-red-400 font-bold">🟥 ${p.cartoes?.vermelho || 0}</span>
+                                                ${isAdmin ? `
+                                                    <button onclick="removePlayer('${p.id}')" class="text-red-400 hover:text-red-300 ml-1">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
                                         </div>
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
