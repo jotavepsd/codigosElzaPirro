@@ -958,28 +958,75 @@
         // ÚLTIMO RESULTADO REGISTRADO
         // =========================================================
         function renderLastMatchCards() {
-            const container = document.getElementById('home-last-matches-cards');
-            if (!container) return;
+    const container = document.getElementById('home-last-matches-cards');
+    if (!container) return;
 
-            const getLastPlayedMatch = (period) => {
-                const teams = getTeams(period);
-                const rounds = generateRoundRobin(teams);
-                const games = appData.jogos?.[period] || {};
-                
-                let lastPlayed = null;
+    const getLastPlayedMatch = (period) => {
+        const games = appData.jogos?.[period] || {};
+        
+        // Converte o objeto de jogos num array com apenas os jogos finalizados
+        const playedGames = Object.values(games).filter(
+            g => g && g.gols1 !== undefined && g.gols2 !== undefined && g.gols1 !== "" && g.gols2 !== ""
+        );
 
-                rounds.forEach(roundMatches => {
-                    roundMatches.forEach(match => {
-                        const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
-                        const g = games[gameId];
-                        if (g && g.gols1 !== undefined && g.gols2 !== undefined && g.gols1 !== "" && g.gols2 !== "") {
-                            lastPlayed = g;
-                        }
-                    });
-                });
+        if (playedGames.length === 0) return null;
 
-                return lastPlayed;
-            };
+        // Ordena pelo carimbo de data/hora mais recente
+        playedGames.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+        return playedGames[0];
+    };
+
+    const lastManha = getLastPlayedMatch('manha');
+    const lastTarde = getLastPlayedMatch('tarde');
+
+    const createLastCard = (data, title, iconClass, colorTheme) => {
+        if (!data) {
+            return `
+                <div class="bg-navy-900/60 rounded-2xl p-5 border border-slate-800/80 flex flex-col justify-center items-center text-center space-y-1.5 min-h-[140px]">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">${title}</span>
+                    <i class="fa-solid fa-clipboard-question text-xl text-slate-600 mt-1"></i>
+                    <p class="text-xs text-slate-500 font-medium">Nenhuma partida finalizada ainda.</p>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="bg-navy-900 rounded-2xl p-5 border border-slate-800 space-y-3 relative overflow-hidden shadow-lg">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+                    <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase ${colorTheme} border border-current/20 flex items-center gap-1.5">
+                        <i class="${iconClass}"></i> ${title}
+                    </span>
+                    <span class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> Finalizado
+                    </span>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 py-1">
+                    <div class="flex items-center justify-end gap-2.5 w-5/12 text-right">
+                        <span class="font-bold text-xs sm:text-sm text-white truncate">${data.team1}</span>
+                        ${renderTeamBadge(data.team1, "w-8 h-8")}
+                    </div>
+
+                    <div class="w-2/12 flex items-center justify-center gap-1.5 px-2 py-1 bg-slate-950 rounded-lg border border-slate-800 font-black text-sm text-gold-400">
+                        <span>${data.gols1}</span>
+                        <span class="text-slate-600 text-[10px]">-</span>
+                        <span>${data.gols2}</span>
+                    </div>
+
+                    <div class="flex items-center justify-start gap-2.5 w-5/12 text-left">
+                        ${renderTeamBadge(data.team2, "w-8 h-8")}
+                        <span class="font-bold text-xs sm:text-sm text-white truncate">${data.team2}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    container.innerHTML = 
+        createLastCard(lastManha, 'Manhã', 'fa-solid fa-sun', 'bg-amber-500/10 text-amber-400') +
+        createLastCard(lastTarde, 'Tarde', 'fa-solid fa-cloud-sun', 'bg-orange-500/10 text-orange-400');
+}
 
             const lastManha = getLastPlayedMatch('manha');
             const lastTarde = getLastPlayedMatch('tarde');
@@ -1441,40 +1488,41 @@
         }
 
         function saveMatchScore(team1, team2, gameId) {
-            if (!isAdmin) return;
-            const input1 = document.getElementById(`input-${gameId}-1`);
-            const input2 = document.getElementById(`input-${gameId}-2`);
+    if (!isAdmin) return;
+    const input1 = document.getElementById(`input-${gameId}-1`);
+    const input2 = document.getElementById(`input-${gameId}-2`);
 
-            if (!input1 || !input2) return;
+    if (!input1 || !input2) return;
 
-            const val1 = input1.value.trim();
-            const val2 = input2.value.trim();
+    const val1 = input1.value.trim();
+    const val2 = input2.value.trim();
 
-            if (val1 === '' || val2 === '') {
-                alert("Por favor, informe o placar dos dois times antes de salvar.");
-                return;
-            }
+    if (val1 === '' || val2 === '') {
+        alert("Por favor, informe o placar dos dois times antes de salvar.");
+        return;
+    }
 
-            if (!appData.jogos) appData.jogos = { manha: {}, tarde: {} };
-            if (!appData.jogos[currentPeriod]) appData.jogos[currentPeriod] = {};
+    if (!appData.jogos) appData.jogos = { manha: {}, tarde: {} };
+    if (!appData.jogos[currentPeriod]) appData.jogos[currentPeriod] = {};
 
-            const existingMatchData = appData.jogos[currentPeriod][gameId] || {};
+    const existingMatchData = appData.jogos[currentPeriod][gameId] || {};
 
-            appData.jogos[currentPeriod][gameId] = {
-                ...existingMatchData,
-                team1,
-                team2,
-                gols1: parseInt(val1),
-                gols2: parseInt(val2)
-            };
+    appData.jogos[currentPeriod][gameId] = {
+        ...existingMatchData,
+        team1,
+        team2,
+        gols1: parseInt(val1),
+        gols2: parseInt(val2),
+        updatedAt: Date.now() // <--- ADICIONADO AQUI
+    };
 
-            if (appData.nextMatches?.[currentPeriod]?.gameId === gameId) {
-                appData.nextMatches[currentPeriod] = null;
-            }
+    if (appData.nextMatches?.[currentPeriod]?.gameId === gameId) {
+        appData.nextMatches[currentPeriod] = null;
+    }
 
-            saveStateToFirebase();
-            renderAllViews();
-        }
+    saveStateToFirebase();
+    renderAllViews();
+}
 
         function resetMatchScore(gameId) {
             if (!isAdmin) return;
