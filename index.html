@@ -542,7 +542,7 @@
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-list-ol text-pitch-500"></i> Lista Geral de Goleadores
                     </div>
-                    <span class="text-xs text-slate-400 font-normal"><i class="fa-solid fa-lock text-slate-500"></i> Gols somados automaticamente pelas súmulas</span>
+                    <span class="text-xs text-slate-400 font-normal"><i class="fa-solid fa-lock text-slate-500"></i> Gols somados automaticamente pelas súmulas (Gol contra não conta para artilharia)</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs sm:text-sm">
@@ -634,11 +634,11 @@
                         </div>
                     </div>
  
-<!-- CAMPO DE PESQUISA DE ATLETAS -->
-<div class="mb-4">
-    <input type="text" id="search-player-input" oninput="filterElencosPlayers()" placeholder="🔍 Pesquisar atleta por nome..." 
-        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-blue-500">
-</div>
+                    <!-- CAMPO DE PESQUISA DE ATLETAS -->
+                    <div class="mb-4">
+                        <input type="text" id="search-player-input" oninput="filterElencosPlayers()" placeholder="🔍 Pesquisar atleta por nome..." 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-blue-500">
+                    </div>
                     <div id="elencos-teams-container" class="grid sm:grid-cols-2 gap-4"></div>
                 </div>
             </div>
@@ -658,7 +658,7 @@
         <div class="bg-navy-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
                 <h3 class="font-bold text-white text-base flex items-center gap-2">
-                    <i class="fa-solid fa-futbol text-gold-400"></i> Registrar Gols & Cartões da Partida
+                    <i class="fa-solid fa-futbol text-gold-400"></i> Registrar Gols, Gol Contra & Cartões
                 </h3>
                 <button onclick="closeGoalsModal()" class="text-slate-400 hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -811,37 +811,37 @@
         }
 
         function filterElencosPlayers() {
-    const query = document.getElementById('search-player-input').value.toLowerCase();
-    const container = document.getElementById('elencos-teams-container');
-    if (!container) return;
-    
-    const cards = container.querySelectorAll('.bg-navy-900');
-
-    cards.forEach(card => {
-        const teamNameElement = card.querySelector('h4');
-        const teamName = teamNameElement ? teamNameElement.textContent.toLowerCase() : "";
-        const playerRows = card.querySelectorAll('.space-y-1.5 > div');
-        let hasVisiblePlayer = false;
-
-        playerRows.forEach(row => {
-            const playerNameEl = row.querySelector('span.text-slate-200');
-            const playerName = playerNameEl ? playerNameEl.textContent.toLowerCase() : "";
+            const query = document.getElementById('search-player-input').value.toLowerCase();
+            const container = document.getElementById('elencos-teams-container');
+            if (!container) return;
             
-            if (playerName.includes(query) || teamName.includes(query)) {
-                row.style.display = "";
-                hasVisiblePlayer = true;
-            } else {
-                row.style.display = "none";
-            }
-        });
+            const cards = container.querySelectorAll('.bg-navy-900');
 
-        if (hasVisiblePlayer || teamName.includes(query) || query === "") {
-            card.style.display = "";
-        } else {
-            card.style.display = "none";
+            cards.forEach(card => {
+                const teamNameElement = card.querySelector('h4');
+                const teamName = teamNameElement ? teamNameElement.textContent.toLowerCase() : "";
+                const playerRows = card.querySelectorAll('.space-y-1.5 > div');
+                let hasVisiblePlayer = false;
+
+                playerRows.forEach(row => {
+                    const playerNameEl = row.querySelector('span.text-slate-200');
+                    const playerName = playerNameEl ? playerNameEl.textContent.toLowerCase() : "";
+                    
+                    if (playerName.includes(query) || teamName.includes(query)) {
+                        row.style.display = "";
+                        hasVisiblePlayer = true;
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+
+                if (hasVisiblePlayer || teamName.includes(query) || query === "") {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            });
         }
-    });
-}
 
         // =========================================================
         // LÓGICA DE FAVORITAR (TIMES E JOGADORES)
@@ -1082,19 +1082,31 @@
         }
 
         // =========================================================
-        // FUNÇÃO AUXILIAR: FORMATAR AUTORES DOS GOLS
+        // FUNÇÃO AUXILIAR: FORMATAR AUTORES DOS GOLS & GOLS CONTRA
         // =========================================================
-        function formatGoalScorers(gameData, teamName) {
-            if (!gameData || !gameData.matchGols) return null;
+        function formatGoalScorers(gameData, targetTeam) {
+            if (!gameData) return null;
             
-            const matchGols = gameData.matchGols;
+            const matchGols = gameData.matchGols || {};
+            const matchOwnGols = gameData.matchOwnGols || {};
             const scorers = [];
 
+            // Gols normais da própria equipe
             Object.entries(matchGols).forEach(([playerId, count]) => {
                 if (count > 0) {
                     const player = appData.jogadores?.[playerId];
-                    if (player && player.team === teamName) {
+                    if (player && player.team === targetTeam) {
                         scorers.push(count > 1 ? `${player.nome} (${count})` : player.nome);
+                    }
+                }
+            });
+
+            // Gols contra marcados pelo time ADVERSÁRIO em favor da equipe atual
+            Object.entries(matchOwnGols).forEach(([playerId, count]) => {
+                if (count > 0) {
+                    const player = appData.jogadores?.[playerId];
+                    if (player && player.team !== targetTeam) {
+                        scorers.push(count > 1 ? `${player.nome} (GC x${count})` : `${player.nome} (GC)`);
                     }
                 }
             });
@@ -1201,6 +1213,7 @@
                 playedGames.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
                 const lastGame = playedGames[0];
                 const goalsInLastMatch = lastGame?.matchGols?.[playerId] || 0;
+                const ownGoalsInLastMatch = lastGame?.matchOwnGols?.[playerId] || 0;
 
                 html += `
                     <div class="bg-navy-900 rounded-2xl p-5 border border-gold-500/40 space-y-3 relative overflow-hidden shadow-xl">
@@ -1237,6 +1250,9 @@
                                 <span class="text-slate-400">Último Jogo: <strong class="text-white">${lastGame.gols1} x ${lastGame.gols2}</strong></span>
                                 ${goalsInLastMatch > 0 ? `
                                     <span class="text-[10px] font-extrabold text-pitch-400 bg-pitch-500/10 px-2 py-0.5 rounded border border-pitch-500/20">⚽ Fez ${goalsInLastMatch} gol(s)!</span>
+                                ` : ''}
+                                ${ownGoalsInLastMatch > 0 ? `
+                                    <span class="text-[10px] font-extrabold text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">⚠️ Gol Contra (${ownGoalsInLastMatch})</span>
                                 ` : ''}
                             </div>
                         ` : ''}
@@ -1882,6 +1898,12 @@
             return match.matchGols[playerId] || 0;
         }
 
+        function getMatchOwnGoalCount(gameId, playerId) {
+            const match = appData.jogos?.[currentPeriod]?.[gameId];
+            if (!match || !match.matchOwnGols) return 0;
+            return match.matchOwnGols[playerId] || 0;
+        }
+
         function getMatchCardCount(gameId, playerId, cardType) {
             const match = appData.jogos?.[currentPeriod]?.[gameId];
             if (!match || !match.matchCards) return 0;
@@ -1889,7 +1911,7 @@
         }
 
         // =========================================================
-        // VALIDAÇÃO DE LIMITE DE GOLS NA PARTIDA
+        // VALIDAÇÃO DE LIMITE DE GOLS NA PARTIDA (NATIVO & GOL CONTRA)
         // =========================================================
         function addMatchGoal(gameId, playerId, amount, teamName) {
             if (!isAdmin) return;
@@ -1903,19 +1925,29 @@
             const maxGolsAllowed = (teamName === match.team1) ? parseInt(match.gols1 || 0) : parseInt(match.gols2 || 0);
 
             if (!match.matchGols) match.matchGols = {};
+            if (!match.matchOwnGols) match.matchOwnGols = {};
 
-            // Calcula o total de gols já atribuídos aos jogadores deste time nesta partida
+            // O time ganha gols Pró vindo dos seus próprios jogadores OU gols contra do adversário
+            const otherTeamName = (teamName === match.team1) ? match.team2 : match.team1;
+
             let currentTeamGolsCount = 0;
+            // Gols Pró dos jogadores deste time
             Object.entries(match.matchGols).forEach(([pId, count]) => {
                 const p = appData.jogadores?.[pId];
                 if (p && p.team === teamName) {
                     currentTeamGolsCount += (count || 0);
                 }
             });
+            // Gols Contra cometidos por jogadores do time adversário
+            Object.entries(match.matchOwnGols).forEach(([pId, count]) => {
+                const p = appData.jogadores?.[pId];
+                if (p && p.team === otherTeamName) {
+                    currentTeamGolsCount += (count || 0);
+                }
+            });
 
-            // Se for para Adicionar (+1) e a soma for ultrapassar o placar salvo
             if (amount > 0 && (currentTeamGolsCount + amount) > maxGolsAllowed) {
-                alert(`⚠️ LIMITE ATINGIDO!\n\nO time "${teamName}" fez apenas ${maxGolsAllowed} gol(s) no placar desta partida.\nVocê já atribuiu ${currentTeamGolsCount} gol(s) aos jogadores.`);
+                alert(`⚠️ LIMITE ATINGIDO!\n\nO time "${teamName}" fez apenas ${maxGolsAllowed} gol(s) no placar desta partida.\nVocê já atribuiu ${currentTeamGolsCount} gol(s) (Pró + Gol Contra do adversário).`);
                 return;
             }
 
@@ -1924,6 +1956,54 @@
             match.matchGols[playerId] = newInMatch;
 
             recalculatePlayerTotalGoals(playerId);
+
+            saveStateToFirebase();
+            renderAllViews();
+        }
+
+        // REGISTRAR GOL CONTRA
+        function addMatchOwnGoal(gameId, playerId, amount, playerTeam) {
+            if (!isAdmin) return;
+
+            if (!appData.jogos || !appData.jogos[currentPeriod] || !appData.jogos[currentPeriod][gameId]) {
+                alert("Por favor, preencha e salve primeiro o placar geral da partida!");
+                return;
+            }
+
+            const match = appData.jogos[currentPeriod][gameId];
+            // Um Gol Contra beneficia a equipe adversária!
+            const beneficiaryTeam = (playerTeam === match.team1) ? match.team2 : match.team1;
+            const maxGolsAllowed = (beneficiaryTeam === match.team1) ? parseInt(match.gols1 || 0) : parseInt(match.gols2 || 0);
+
+            if (!match.matchGols) match.matchGols = {};
+            if (!match.matchOwnGols) match.matchOwnGols = {};
+
+            let currentBeneficiaryGolsCount = 0;
+            // Gols Pró dos jogadores do time beneficiado
+            Object.entries(match.matchGols).forEach(([pId, count]) => {
+                const p = appData.jogadores?.[pId];
+                if (p && p.team === beneficiaryTeam) {
+                    currentBeneficiaryGolsCount += (count || 0);
+                }
+            });
+            // Gols contra a favor do time beneficiado (vindos do time do player atual)
+            Object.entries(match.matchOwnGols).forEach(([pId, count]) => {
+                const p = appData.jogadores?.[pId];
+                if (p && p.team === playerTeam) {
+                    currentBeneficiaryGolsCount += (count || 0);
+                }
+            });
+
+            if (amount > 0 && (currentBeneficiaryGolsCount + amount) > maxGolsAllowed) {
+                alert(`⚠️ LIMITE ATINGIDO!\n\nO time beneficiado ("${beneficiaryTeam}") possui ${maxGolsAllowed} gol(s) gravado(s) no placar.\nVocê já distribuiu ${currentBeneficiaryGolsCount} gol(s) a favor dele nesta partida.`);
+                return;
+            }
+
+            const currentOwnInMatch = match.matchOwnGols[playerId] || 0;
+            const newOwnInMatch = Math.max(0, currentOwnInMatch + amount);
+            match.matchOwnGols[playerId] = newOwnInMatch;
+
+            // OBS: Gol contra NÃO soma aos gols do atleta na artilharia da competição!
 
             saveStateToFirebase();
             renderAllViews();
@@ -1994,9 +2074,10 @@
             const maxGols1 = match.gols1 !== undefined ? parseInt(match.gols1) : 0;
             const maxGols2 = match.gols2 !== undefined ? parseInt(match.gols2) : 0;
 
-            // Calcula total de gols alocados para cada time
+            // Calcula total de gols alocados para cada time (Pró + Gol Contra Adv)
             let allocatedGols1 = 0;
             let allocatedGols2 = 0;
+            
             if (match.matchGols) {
                 Object.entries(match.matchGols).forEach(([pId, count]) => {
                     const p = appData.jogadores?.[pId];
@@ -2006,9 +2087,21 @@
                     }
                 });
             }
+            if (match.matchOwnGols) {
+                Object.entries(match.matchOwnGols).forEach(([pId, count]) => {
+                    const p = appData.jogadores?.[pId];
+                    if (p) {
+                        // Gol contra de jogador do Team 1 dá gol ao Team 2
+                        if (p.team === team1) allocatedGols2 += count;
+                        // Gol contra de jogador do Team 2 dá gol ao Team 1
+                        if (p.team === team2) allocatedGols1 += count;
+                    }
+                });
+            }
 
             const renderPlayerRow = (p) => {
                 const matchGols = getMatchGoalCount(gameId, p.id);
+                const matchOwnGols = getMatchOwnGoalCount(gameId, p.id);
                 const yellowCards = getMatchCardCount(gameId, p.id, 'amarelo');
                 const redCards = getMatchCardCount(gameId, p.id, 'vermelho');
 
@@ -2016,10 +2109,10 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white text-sm">${p.nome}</span>
-                            <span class="text-[10px] text-slate-400">Total: ${p.gols || 0} Golaço(s)</span>
+                            <span class="text-[10px] text-slate-400">Total no Campeonato: ${p.gols || 0} Golaço(s)</span>
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900">
-                            <!-- Gols -->
+                            <!-- Gols Pró -->
                             <div class="flex items-center gap-1.5">
                                 <span class="text-gold-400 font-bold"><i class="fa-solid fa-futbol"></i> Gols (${matchGols}):</span>
                                 ${isAdmin ? `
@@ -2027,6 +2120,16 @@
                                     <button onclick="addMatchGoal('${gameId}', '${p.id}', -1, '${p.team}'); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-bold text-xs">-</button>
                                 ` : ''}
                             </div>
+                            
+                            <!-- Gol Contra -->
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-red-400 font-bold"><i class="fa-solid fa-arrow-rotate-left"></i> GC (${matchOwnGols}):</span>
+                                ${isAdmin ? `
+                                    <button onclick="addMatchOwnGoal('${gameId}', '${p.id}', 1, '${p.team}'); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-0.5 bg-red-600 text-white rounded font-bold text-xs" title="Adicionar Gol Contra">+</button>
+                                    <button onclick="addMatchOwnGoal('${gameId}', '${p.id}', -1, '${p.team}'); openGoalsModal('${team1}', '${team2}', '${gameId}');" class="px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-bold text-xs" title="Remover Gol Contra">-</button>
+                                ` : ''}
+                            </div>
+
                             <!-- Cartões -->
                             <div class="flex items-center gap-3">
                                 <div class="flex items-center gap-1">
