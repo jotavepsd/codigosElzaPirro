@@ -550,6 +550,43 @@
         </div>
     </div>
 
+    <!-- Modal: Marcar Próxima Partida -->
+<div id="modal-next-match" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-navy-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-extrabold text-white text-base flex items-center gap-2">
+                <i class="fa-solid fa-bell text-gold-400"></i> Agendar Próxima Partida
+            </h3>
+            <button onclick="closeNextMatchModal()" class="text-slate-400 hover:text-white text-sm">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            <p id="next-match-modal-teams" class="text-xs font-bold text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800 text-center"></p>
+            
+            <div>
+                <label for="next-match-datetime-input" class="block text-xs font-bold text-slate-400 mb-1.5">
+                    Data e Horário do Jogo
+                </label>
+                <input type="text" id="next-match-datetime-input" placeholder="Ex: 15/11 às 08:30"
+                    class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-gold-500">
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <button onclick="closeNextMatchModal()"
+                class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+                Cancelar
+            </button>
+            <button onclick="confirmNextMatchModal()"
+                class="px-4 py-2 rounded-xl text-xs font-bold bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-check"></i> Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
     <!-- FIREBASE COMPAT SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>

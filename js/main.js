@@ -7,8 +7,9 @@ import {
     renderMatchesView, renderFavoritosSection, renderTopScorersCards, 
     renderLastMatchCards, renderNextMatchCards, populateHomeTeamBadges, 
     updateHomeStats, renderArtilharia, updateTeamDropdown, renderElencos, 
-    getPlayersByTeamAndPeriod 
+    getPlayersByTeamAndPeriod, showToast, updateConnectionStatus 
 } from './ui.js';
+import { calculateStandings } from './rules.js';
 
 // Expor funções globais chamadas pelo HTML onclick
 window.switchTab = switchTab;
@@ -116,20 +117,55 @@ window.filterElencosPlayers = function() {
     });
 };
 
+let pendingNextMatchData = null;
+
 window.setNextMatch = function(period, gameId, team1, team2) {
     if (!state.isAdmin) return;
     const existing = state.appData.nextMatches?.[period];
     if (existing && existing.gameId) {
-        alert(`Já existe um próximo jogo agendado no período da ${period === 'manha' ? 'Manhã' : 'Tarde'}!`);
+        showToast(`Já existe um próximo jogo agendado no período da ${period === 'manha' ? 'Manhã' : 'Tarde'}!`, 'warning');
         return;
     }
-    const dateTimeInput = prompt("Digite a data/horário do jogo (Ex: 15/11 às 08:30):");
-    if (dateTimeInput === null) return;
+
+    pendingNextMatchData = { period, gameId, team1, team2 };
+    
+    const teamsLabel = document.getElementById('next-match-modal-teams');
+    const input = document.getElementById('next-match-datetime-input');
+    const modal = document.getElementById('modal-next-match');
+
+    if (teamsLabel) teamsLabel.textContent = `${team1}  VS  ${team2}`;
+    if (input) input.value = '';
+    if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => input?.focus(), 50);
+    }
+};
+
+window.closeNextMatchModal = function() {
+    pendingNextMatchData = null;
+    const modal = document.getElementById('modal-next-match');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.confirmNextMatchModal = function() {
+    if (!state.isAdmin || !pendingNextMatchData) return;
+
+    const input = document.getElementById('next-match-datetime-input');
+    const dateTime = input ? input.value.trim() : '';
+
+    if (!dateTime) {
+        showToast('Informe a data/horário da partida!', 'warning');
+        return;
+    }
+
+    const { period, gameId, team1, team2 } = pendingNextMatchData;
     if (!state.appData.nextMatches) state.appData.nextMatches = { manha: null, tarde: null };
-    state.appData.nextMatches[period] = { gameId, team1, team2, dateTime: dateTimeInput.trim() };
+    state.appData.nextMatches[period] = { gameId, team1, team2, dateTime };
+
     saveStateToFirebase();
     renderAllViews();
-    alert("Partida marcada como PRÓXIMA PARTIDA com sucesso!");
+    window.closeNextMatchModal();
+    showToast('Partida marcada como Próximo Jogo!', 'success');
 };
 
 window.cancelNextMatch = function(period) {
@@ -147,23 +183,42 @@ window.saveMatchScore = function(team1, team2, gameId) {
     const input1 = document.getElementById(`input-${gameId}-1`);
     const input2 = document.getElementById(`input-${gameId}-2`);
     if (!input1 || !input2) return;
+
     const val1 = input1.value.trim();
     const val2 = input2.value.trim();
+
     if (val1 === '' || val2 === '') {
-        alert("Por favor, informe o placar dos dois times antes de salvar.");
+        showToast("Informe o placar dos dois times antes de salvar.", "warning");
+    }
+
+    const gols1 = Number(val1);
+    const gols2 = Number(val2);
+
+    // NOVO: Garante que sejam números inteiros válidos, não negativos e dentro de um limite razoável
+    if (!Number.isInteger(gols1) || !Number.isInteger(gols2) || gols1 < 0 || gols2 < 0) {
+        showToast("Placar inválido! Use apenas números inteiros positivos.", "error");
         return;
     }
+
+    if (gols1 > 30 || gols2 > 30) {
+        showToast("⚠️ Valor muito alto! O limite máximo permitido por partida é de 30 gols.", "warning");
+        return;
+    }
+
     if (!state.appData.jogos) state.appData.jogos = { manha: {}, tarde: {} };
     if (!state.appData.jogos[state.currentPeriod]) state.appData.jogos[state.currentPeriod] = {};
+
     const existingMatchData = state.appData.jogos[state.currentPeriod][gameId] || {};
     state.appData.jogos[state.currentPeriod][gameId] = {
         ...existingMatchData, team1, team2,
-        gols1: parseInt(val1), gols2: parseInt(val2),
+        gols1: gols1, gols2: gols2,
         updatedAt: Date.now()
     };
+
     if (state.appData.nextMatches?.[state.currentPeriod]?.gameId === gameId) {
         state.appData.nextMatches[state.currentPeriod] = null;
     }
+
     saveStateToFirebase();
     renderAllViews();
 };
@@ -221,7 +276,7 @@ window.openGoalsModal = function(team1, team2, gameId) {
             <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-white text-sm">${p.nome}</span>
-                    <span class="text-[10px] text-slate-400">Total no Campeonato: ${p.gols || 0} Golaço(s)</span>
+                    <span class="text-[10px] text-slate-400">Total no Campeonato: ${p.gols || 0} Gol(s)</span>
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900">
                     <div class="flex items-center gap-1.5">
@@ -429,7 +484,7 @@ window.renameTeam = function(period, oldName) {
     populateHomeTeamBadges();
     updateTeamDropdown();
     renderAllViews();
-    alert(`Time alterado com sucesso!`);
+    showToast(`Time alterado com sucesso!`, "success");
 };
 
 window.handleAddPlayer = function(e) {
@@ -440,6 +495,17 @@ window.handleAddPlayer = function(e) {
     const nameInput = document.getElementById('new-player-name');
     const name = nameInput.value.trim();
     if (!name) return;
+
+    // NOVO: Bloqueia cadastro de jogador com o mesmo nome na mesma equipe e período
+    const duplicated = Object.values(state.appData.jogadores || {}).some(
+        p => p.team === team && p.periodo === period && p.nome.toLowerCase() === name.toLowerCase()
+    );
+
+    if (duplicated) {
+        showToast(`Já existe um atleta chamado "${name}" nesta equipe!`, "warning");
+        return;
+    }
+
     const playerId = `player_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     if (!state.appData.jogadores) state.appData.jogadores = {};
     state.appData.jogadores[playerId] = {
@@ -449,7 +515,7 @@ window.handleAddPlayer = function(e) {
     saveStateToFirebase();
     nameInput.value = "";
     renderElencos(state.currentElencoPeriod);
-    alert(`Jogador ${name} cadastrado com sucesso!`);
+    showToast(`Atleta ${name} cadastrado com sucesso!`, "success");
 };
 
 window.removePlayer = function(playerId) {
@@ -463,7 +529,12 @@ window.removePlayer = function(playerId) {
 
 window.confirmReset = function() {
     if (!state.isAdmin) return;
-    if (confirm("ATENÇÃO: Deseja apagar todos os placares, partidas e dados de artilharia?")) {
+
+    const confirmationText = prompt(
+        "⚠️ ATENÇÃO EXTREMA!\n\nIsso apagará TODOS os placares, partidas, elencos e artilharia do campeonato.\n\nPara confirmar esta ação irreversível, digite ZERAR em letras maiúsculas:"
+    );
+
+    if (confirmationText === "ZERAR") {
         state.appData = {
             teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
             teamLogos: {},
@@ -474,8 +545,77 @@ window.confirmReset = function() {
         saveStateToFirebase();
         populateHomeTeamBadges();
         renderAllViews();
-        alert("O campeonato foi restaurado!");
+        alert("✅ O campeonato foi completamente restaurado para o estado inicial!");
+    } else if (confirmationText !== null) {
+        alert("❌ Ação cancelada. A palavra de confirmação não confere.");
     }
+};
+
+async function shareOrCopyText(text) {
+    if (navigator.share) {
+        try {
+            await navigator.share({ text });
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+        }
+    }
+    try {
+        await navigator.clipboard.writeText(text);
+        showToast('Resumo copiado! Cole no WhatsApp para compartilhar.', 'success');
+    } catch (e) {
+        prompt('Copie o resumo abaixo:', text);
+    }
+}
+
+window.shareMatchResult = function(period, gameId) {
+    const game = state.appData.jogos?.[period]?.[gameId];
+    if (!game || game.gols1 === undefined || game.gols2 === undefined) return;
+
+    const periodoLabel = period === 'manha' ? 'Manhã' : 'Tarde';
+    let text = `⚽ *INTERCLASSE 2026 (${periodoLabel})*\n`;
+    text += `🏆 *${game.team1} ${game.gols1} x ${game.gols2} ${game.team2}*\n`;
+
+    const getScorersList = (targetTeam) => {
+        const list = [];
+        Object.entries(game.matchGols || {}).forEach(([pId, count]) => {
+            const p = state.appData.jogadores?.[pId];
+            if (p && p.team === targetTeam && count > 0) {
+                list.push(count > 1 ? `${p.nome} (${count})` : p.nome);
+            }
+        });
+        Object.entries(game.matchOwnGols || {}).forEach(([pId, count]) => {
+            const p = state.appData.jogadores?.[pId];
+            if (p && p.team !== targetTeam && count > 0) {
+                list.push(count > 1 ? `${p.nome} (GC x${count})` : `${p.nome} (GC)`);
+            }
+        });
+        return list.join(', ');
+    };
+
+    const s1 = getScorersList(game.team1);
+    const s2 = getScorersList(game.team2);
+    if (s1) text += `• ${game.team1}: ${s1}\n`;
+    if (s2) text += `• ${game.team2}: ${s2}\n`;
+
+    text += `\n📊 Acompanhe ao vivo: ${window.location.href}`;
+    shareOrCopyText(text);
+};
+
+window.shareStandings = function(period = state.currentPeriod) {
+    const standings = calculateStandings(period);
+    const periodoLabel = period === 'manha' ? 'Manhã' : 'Tarde';
+
+    let text = `🏆 *CLASSIFICAÇÃO - INTERCLASSE 2026 (${periodoLabel})*\n\n`;
+    standings.forEach((t, idx) => {
+        const pos = idx + 1;
+        const medal = pos === 1 ? '🥇' : (pos === 2 ? '🥈' : (pos === 3 ? '🥉' : `${pos}º`));
+        const sg = t.sg > 0 ? `+${t.sg}` : t.sg;
+        text += `${medal} *${t.nome}* — ${t.pts} pts (${t.j}J | ${t.v}V | SG: ${sg})\n`;
+    });
+
+    text += `\n📲 Tabela completa: ${window.location.href}`;
+    shareOrCopyText(text);
 };
 
 function checkSavedSession() {
@@ -503,11 +643,27 @@ function checkFavoritosIntroModal() {
 
 function initFirebaseListener() {
     if (!state.rootRef) {
+        updateConnectionStatus('offline');
         renderAllViews();
         return;
     }
+
+    updateConnectionStatus('syncing');
+
+    // Monitora em tempo real o estado real de conexão com os servidores do Firebase
+    state.db.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+            state.isFirebaseOnline = true;
+            updateConnectionStatus('online');
+        } else {
+            state.isFirebaseOnline = false;
+            updateConnectionStatus('offline');
+        }
+    });
+
     state.rootRef.on('value', (snapshot) => {
         state.isFirebaseOnline = true;
+        updateConnectionStatus('online');
         const val = snapshot.val();
         if (val) {
             state.appData = {
@@ -525,6 +681,7 @@ function initFirebaseListener() {
         renderAllViews();
     }, (error) => {
         console.warn("Firebase fallback:", error);
+        updateConnectionStatus('offline');
         renderAllViews();
     });
 }
@@ -536,9 +693,26 @@ window.onload = function() {
         state.rootRef = state.db.ref("futebol_2026");
     } catch(e) {
         console.warn("Firebase init warn:", e);
+        updateConnectionStatus('offline');
     }
     checkSavedSession();
     initFirebaseListener();
     populateHomeTeamBadges();
     updateTeamDropdown();
+};
+
+window.setMatchStatusFilter = function(status) {
+    state.currentMatchStatusFilter = status;
+    renderMatchesView();
+};
+
+window.setMatchTeamFilter = function(team) {
+    state.currentMatchTeamFilter = team;
+    renderMatchesView();
+};
+
+window.resetMatchFilters = function() {
+    state.currentMatchStatusFilter = 'todos';
+    state.currentMatchTeamFilter = 'todos';
+    renderMatchesView();
 };

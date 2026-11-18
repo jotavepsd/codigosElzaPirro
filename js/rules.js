@@ -86,3 +86,44 @@ export function calculateStandings(period) {
         return a.nome.localeCompare(b.nome);
     });
 }
+
+export function getSuspendedPlayersForTeam(teamName, period, stateRef) {
+    const gamesObj = stateRef.appData.jogos?.[period] || {};
+    const playersObj = stateRef.appData.jogadores || {};
+
+    // Pega apenas os jogos já finalizados da equipe, ordenados do mais antigo para o mais recente
+    const teamPlayedGames = Object.values(gamesObj)
+        .filter(g => g && (g.team1 === teamName || g.team2 === teamName) && g.gols1 !== undefined && g.gols2 !== undefined && g.gols1 !== "" && g.gols2 !== "")
+        .sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+
+    if (teamPlayedGames.length === 0) return [];
+
+    const lastGame = teamPlayedGames[teamPlayedGames.length - 1];
+    const teamPlayers = Object.values(playersObj).filter(p => p.team === teamName && p.periodo === period);
+    const suspended = [];
+
+    teamPlayers.forEach(player => {
+        const lastCards = lastGame.matchCards?.[player.id] || { amarelo: 0, vermelho: 0 };
+        const gotRedInLastGame = (lastCards.vermelho || 0) > 0;
+        const gotYellowInLastGame = (lastCards.amarelo || 0) > 0;
+
+        // Soma todos os amarelos acumulados nos jogos finalizados do time até agora
+        let totalYellows = 0;
+        teamPlayedGames.forEach(g => {
+            totalYellows += (g.matchCards?.[player.id]?.amarelo || 0);
+        });
+
+        // Suspenso se levou vermelho no último jogo OU atingiu múltiplo de 3 amarelos no último jogo
+        const suspendedByYellows = gotYellowInLastGame && totalYellows > 0 && (totalYellows % 3 === 0);
+
+        if (gotRedInLastGame || suspendedByYellows) {
+            suspended.push({
+                id: player.id,
+                nome: player.nome,
+                reason: gotRedInLastGame ? 'Cartão Vermelho' : '3º Cartão Amarelo'
+            });
+        }
+    });
+
+    return suspended;
+}

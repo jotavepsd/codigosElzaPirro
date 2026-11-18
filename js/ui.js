@@ -1,6 +1,6 @@
 import { state, saveStateToFirebase } from './state.js';
 import { getTeams, getTeamLogo, renderTeamBadge, slugify } from './utils.js';
-import { generateRoundRobin, calculateStandings } from './rules.js';
+import { generateRoundRobin, calculateStandings, getSuspendedPlayersForTeam } from './rules.js';
 
 export function updateRoleBadgeUI() {
     const text = document.getElementById('user-role-text');
@@ -136,6 +136,19 @@ export function renderStandingsTable() {
     if (!body) return;
     const standings = calculateStandings(state.currentPeriod);
 
+    let shareBar = document.getElementById('standings-share-bar');
+    if (!shareBar && body.parentElement) {
+        shareBar = document.createElement('div');
+        shareBar.id = 'standings-share-bar';
+        shareBar.className = 'flex justify-end mb-3';
+        shareBar.innerHTML = `
+            <button onclick="shareStandings()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 transition-all flex items-center gap-1.5">
+                <i class="fa-brands fa-whatsapp text-sm"></i> Compartilhar Classificação
+            </button>
+        `;
+        body.parentElement.parentElement.insertBefore(shareBar, body.parentElement);
+    }
+
     body.innerHTML = standings.map((item, idx) => {
         const pos = idx + 1;
         let posBadge = `<span class="font-bold text-slate-400">${pos}º</span>`;
@@ -193,27 +206,95 @@ export function renderStandingsTable() {
 export function renderMatchesView() {
     const container = document.getElementById('matches-container');
     if (!container) return;
+
+    const teams = getTeams(state.currentPeriod);
+    // Garante que o filtro de equipe seja válido no turno atual
+    if (state.currentMatchTeamFilter !== 'todos' && !teams.includes(state.currentMatchTeamFilter)) {
+        state.currentMatchTeamFilter = 'todos';
+    }
+
+    const statusFilter = state.currentMatchStatusFilter || 'todos';
+    const teamFilter = state.currentMatchTeamFilter || 'todos';
+    const hasActiveFilter = statusFilter !== 'todos' || teamFilter !== 'todos';
+
+    // Barra de Filtros (Status + Equipe)
+    const statusBtnClass = (val) => statusFilter === val
+        ? 'bg-gold-500 text-navy-950 border-gold-400 shadow'
+        : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800';
+
+    let html = `
+        <div class="bg-navy-900/90 border border-slate-800 rounded-2xl p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mr-1">
+                    <i class="fa-solid fa-filter text-gold-400 mr-1"></i> Status:
+                </span>
+                <button onclick="setMatchStatusFilter('todos')" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${statusBtnClass('todos')}">
+                    Todos
+                </button>
+                <button onclick="setMatchStatusFilter('pendentes')" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${statusBtnClass('pendentes')}">
+                    Pendentes
+                </button>
+                <button onclick="setMatchStatusFilter('finalizados')" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${statusBtnClass('finalizados')}">
+                    Finalizados
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <select onchange="setMatchTeamFilter(this.value)" aria-label="Filtrar por equipe"
+                    class="bg-slate-950 border border-slate-700 text-white text-xs font-bold rounded-xl px-3.5 py-2 focus:outline-none focus:border-gold-500 w-full md:w-56">
+                    <option value="todos" ${teamFilter === 'todos' ? 'selected' : ''}>🛡️ Todas as Equipes</option>
+                    ${teams.map(t => `<option value="${t}" ${teamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
+                </select>
+                ${hasActiveFilter ? `
+                    <button onclick="resetMatchFilters()" title="Limpar filtros"
+                        class="px-3 py-2 rounded-xl text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all shrink-0">
+                        <i class="fa-solid fa-xmark"></i> Limpar
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
     const currentTeams = getTeams(state.currentPeriod);
     const rounds = generateRoundRobin(currentTeams, state.currentPeriod);
+    const savedGames = state.appData.jogos?.[state.currentPeriod] || {};
     const periodGames = state.appData.jogos[state.currentPeriod] || {};
     const scheduledNextMatch = state.appData.nextMatches?.[state.currentPeriod];
-
-    let html = "";
+    let totalVisibleMatches = 0;
 
     rounds.forEach((roundMatches, roundIdx) => {
         const roundNum = roundIdx + 1;
+        const filteredMatches = roundMatches.filter(match => {
+            const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
+            const saved = savedGames[gameId];
+            const isPlayed = saved && saved.gols1 !== undefined && saved.gols2 !== undefined && saved.gols1 !== '' && saved.gols2 !== '';
+
+            if (teamFilter !== 'todos' && match.team1 !== teamFilter && match.team2 !== teamFilter) {
+                return false;
+            }
+            if (statusFilter === 'finalizados' && !isPlayed) return false;
+            if (statusFilter === 'pendentes' && isPlayed) return false;
+
+            return true;
+        });
+
+        // Se a rodada não tiver jogos que batem com o filtro, oculta apenas ela
+        if (filteredMatches.length === 0) return;
+
+        totalVisibleMatches += filteredMatches.length;
+
         html += `
             <div class="bg-navy-900 rounded-2xl border border-slate-800 p-5 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
                     <span class="text-xs font-bold uppercase tracking-wider text-pitch-400 flex items-center gap-2">
                         <i class="fa-solid fa-flag-checkered"></i> Rodada ${roundNum} ${roundNum > (currentTeams.length - (currentTeams.length % 2 !== 0 ? 0 : 0) - 1) ? '(Returno)' : ''}
                     </span>
-                    <span class="text-xs text-slate-500">${roundMatches.length} Partida(s)</span>
+                    <span class="text-xs text-slate-500">${filteredMatches.length} Partida(s)</span>
                 </div>
                 <div class="space-y-3">
         `;
 
-        roundMatches.forEach(match => {
+        filteredMatches.forEach(match => {
             const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
             const savedGame = periodGames[gameId] || {};
             const val1 = savedGame.gols1 !== undefined ? savedGame.gols1 : '';
@@ -272,6 +353,18 @@ export function renderMatchesView() {
                             <i class="fa-solid fa-futbol"></i> Gols & Cartões
                         </button>
                     </div>
+                    ${isScheduledAsNext ? (() => {
+                        const susp1 = getSuspendedPlayersForTeam(match.team1, state.currentPeriod, state);
+                        const susp2 = getSuspendedPlayersForTeam(match.team2, state.currentPeriod, state);
+                        if (susp1.length === 0 && susp2.length === 0) return '';
+                        return `
+                            <div class="w-full pt-2.5 mt-1 border-t border-red-500/20 flex flex-wrap items-center gap-2 text-[11px]">
+                                <span class="font-bold text-red-400 flex items-center gap-1"><i class="fa-solid fa-ban"></i> Suspensos neste jogo:</span>
+                                ${susp1.map(s => `<span class="px-2 py-0.5 rounded bg-red-500/10 text-red-300 border border-red-500/30">${s.nome} (${match.team1} - ${s.reason})</span>`).join('')}
+                                ${susp2.map(s => `<span class="px-2 py-0.5 rounded bg-red-500/10 text-red-300 border border-red-500/30">${s.nome} (${match.team2} - ${s.reason})</span>`).join('')}
+                            </div>
+                        `;
+                    })() : ''}
                 </div>
             `;
         });
@@ -281,6 +374,19 @@ export function renderMatchesView() {
             </div>
         `;
     });
+
+    // Verifica apenas uma vez no final se nenhum jogo apareceu após filtrar todas as rodadas
+    if (totalVisibleMatches === 0) {
+        html += `
+            <div class="bg-navy-900/60 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
+                <i class="fa-solid fa-magnifying-glass text-2xl text-slate-500"></i>
+                <p class="text-sm font-bold text-slate-300">Nenhuma partida encontrada para esta combinação de filtros.</p>
+                <button onclick="resetMatchFilters()" class="px-4 py-2 rounded-xl text-xs font-bold bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all">
+                    Mostrar Todos os Jogos
+                </button>
+            </div>
+        `;
+    }
 
     container.innerHTML = html;
 }
@@ -384,6 +490,16 @@ export function renderFavoritosSection() {
                 ` : `
                     <p class="text-xs text-slate-500 italic">Nenhum resultado registrado para este time ainda.</p>
                 `}
+                ${(() => {
+                    const suspList = getSuspendedPlayersForTeam(teamName, period, state);
+                    if (suspList.length === 0) return '';
+                    return `
+                        <div class="pt-2 border-t border-slate-800 text-[11px] space-y-1">
+                            <span class="text-red-400 font-bold flex items-center gap-1"><i class="fa-solid fa-ban"></i> Suspensos p/ próximo jogo:</span>
+                            <p class="text-red-300">${suspList.map(s => `${s.nome} (${s.reason})`).join(', ')}</p>
+                        </div>
+                    `;
+                })()}
             </div>
         `;
     });
@@ -432,6 +548,18 @@ export function renderFavoritosSection() {
                         <span class="font-bold text-red-400 text-sm">${player.cartoes?.vermelho || 0}</span>
                     </div>
                 </div>
+
+                ${(() => {
+                    const suspList = getSuspendedPlayersForTeam(player.team, player.periodo, state);
+                    const playerSusp = suspList.find(s => s.id === player.id);
+                    if (!playerSusp) return '';
+                    return `
+                        <div class="bg-red-500/15 border border-red-500/40 rounded-xl px-3 py-2 text-[11px] font-bold text-red-300 flex items-center gap-2">
+                            <i class="fa-solid fa-ban text-red-400"></i>
+                            <span>Suspenso da próxima partida (${playerSusp.reason})</span>
+                        </div>
+                    `;
+                })()}
 
                 ${lastGame ? `
                     <div class="text-xs pt-1 border-t border-slate-800 flex items-center justify-between">
@@ -627,6 +755,25 @@ export function renderNextMatchCards() {
                         <span class="font-extrabold text-sm text-white leading-tight">${data.team2}</span>
                     </div>
                 </div>
+                ${(() => {
+                    const susp1 = getSuspendedPlayersForTeam(data.team1, period, state);
+                    const susp2 = getSuspendedPlayersForTeam(data.team2, period, state);
+                    const allSusp = [
+                        ...susp1.map(s => ({ ...s, team: data.team1 })),
+                        ...susp2.map(s => ({ ...s, team: data.team2 }))
+                    ];
+                    if (allSusp.length === 0) return '';
+                    return `
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-2.5 space-y-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-red-400 flex items-center gap-1">
+                                <i class="fa-solid fa-ban"></i> Desfalques por Suspensão
+                            </span>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${allSusp.map(s => `<span class="text-[11px] font-semibold text-red-200 bg-slate-950/80 px-2 py-0.5 rounded border border-red-500/20">${s.nome} <span class="text-slate-400">(${s.team})</span></span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                })()}
                 ${state.isAdmin ? `
                     <div class="pt-2 border-t border-slate-800 flex justify-end">
                         <button onclick="cancelNextMatch('${period}')" class="text-xs font-bold text-red-400 hover:text-red-300 flex items-center gap-1">
@@ -903,4 +1050,65 @@ export function getPlayersByTeamAndPeriod(teamName, period) {
     return Object.values(state.appData.jogadores || {}).filter(
         p => p.team === teamName && p.periodo === period
     );
+}
+
+export function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none';
+        document.body.appendChild(container);
+    }
+
+    const styles = {
+        success: 'bg-slate-900 border-emerald-500/50 text-emerald-400',
+        error: 'bg-slate-900 border-red-500/50 text-red-400',
+        warning: 'bg-slate-900 border-amber-500/50 text-amber-400'
+    };
+
+    const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-exclamation',
+        warning: 'fa-triangle-exclamation'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `${styles[type] || styles.success} border px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs font-bold transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto backdrop-blur-md`;
+    toast.innerHTML = `
+        <i class="fa-solid ${icons[type] || icons.success} text-sm"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+    });
+
+    setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3200);
+}
+
+export function updateConnectionStatus(status) {
+    let badge = document.getElementById('firebase-status-badge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'firebase-status-badge';
+        badge.className = 'fixed bottom-4 left-4 z-40 px-3 py-1.5 rounded-full text-[11px] font-bold border backdrop-blur-md flex items-center gap-2 shadow-lg transition-all duration-300';
+        document.body.appendChild(badge);
+    }
+
+    if (status === 'syncing') {
+        badge.className = 'fixed bottom-4 left-4 z-40 px-3 py-1.5 rounded-full text-[11px] font-bold border backdrop-blur-md flex items-center gap-2 shadow-lg bg-slate-900/90 border-amber-500/40 text-amber-400';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Sincronizando...`;
+    } else if (status === 'online') {
+        badge.className = 'fixed bottom-4 left-4 z-40 px-3 py-1.5 rounded-full text-[11px] font-bold border backdrop-blur-md flex items-center gap-2 shadow-lg bg-slate-900/90 border-emerald-500/30 text-emerald-400';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Online`;
+    } else {
+        badge.className = 'fixed bottom-4 left-4 z-40 px-3 py-1.5 rounded-full text-[11px] font-bold border backdrop-blur-md flex items-center gap-2 shadow-lg bg-slate-900/90 border-red-500/40 text-red-400';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400"></span> Modo Offline`;
+    }
 }
