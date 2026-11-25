@@ -167,10 +167,15 @@ export function renderStandingsTable() {
         const sgColor = item.sg > 0 ? "text-emerald-400" : (item.sg < 0 ? "text-red-400" : "text-slate-400");
 
         const last5 = item.form.slice(-5);
-        let formHtml = last5.map(res => {
-            if (res === 'V') return `<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold" title="Vitória">V</span>`;
-            if (res === 'E') return `<span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-bold" title="Empate">E</span>`;
-            return `<span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center text-[10px] font-bold" title="Derrota">D</span>`;
+        let formHtml = last5.map(entry => {
+            const res = typeof entry === 'string' ? entry : entry.res;
+            const tooltip = typeof entry === 'string'
+                ? (res === 'V' ? 'Vitória' : res === 'E' ? 'Empate' : 'Derrota')
+                : entry.tooltip;
+
+            if (res === 'V') return `<span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold cursor-help" title="${tooltip}">V</span>`;
+            if (res === 'E') return `<span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-[10px] font-bold cursor-help" title="${tooltip}">E</span>`;
+            return `<span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 flex items-center justify-center text-[10px] font-bold cursor-help" title="${tooltip}">D</span>`;
         }).join('');
 
         if (last5.length === 0) {

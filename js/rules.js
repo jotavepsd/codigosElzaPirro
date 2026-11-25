@@ -46,34 +46,50 @@ export function calculateStandings(period) {
     });
 
     const rounds = generateRoundRobin(teams, period);
+    const playedMatches = [];
+
     rounds.forEach(roundMatches => {
         roundMatches.forEach(match => {
             const gameId = `${slugify(match.team1)}_x_${slugify(match.team2)}`;
             const game = games[gameId];
             if (game && game.gols1 !== undefined && game.gols2 !== undefined && game.gols1 !== "" && game.gols2 !== "") {
-                const g1 = parseInt(game.gols1);
-                const g2 = parseInt(game.gols2);
-                const t1 = match.team1;
-                const t2 = match.team2;
-
-                if (stats[t1] && stats[t2]) {
-                    stats[t1].j++; stats[t2].j++;
-                    stats[t1].gp += g1; stats[t1].gc += g2;
-                    stats[t2].gp += g2; stats[t2].gc += g1;
-
-                    if (g1 > g2) {
-                        stats[t1].pts += 3; stats[t1].v++; stats[t1].form.push('V');
-                        stats[t2].d++; stats[t2].form.push('D');
-                    } else if (g2 > g1) {
-                        stats[t2].pts += 3; stats[t2].v++; stats[t2].form.push('V');
-                        stats[t1].d++; stats[t1].form.push('D');
-                    } else {
-                        stats[t1].pts += 1; stats[t1].e++; stats[t1].form.push('E');
-                        stats[t2].pts += 1; stats[t2].e++; stats[t2].form.push('E');
-                    }
-                }
+                playedMatches.push({
+                    team1: match.team1,
+                    team2: match.team2,
+                    g1: parseInt(game.gols1),
+                    g2: parseInt(game.gols2),
+                    updatedAt: game.updatedAt || 0
+                });
             }
         });
+    });
+
+   
+    playedMatches.sort((a, b) => a.updatedAt - b.updatedAt);
+
+    playedMatches.forEach(({ team1: t1, team2: t2, g1, g2 }) => {
+        if (stats[t1] && stats[t2]) {
+            stats[t1].j++; stats[t2].j++;
+            stats[t1].gp += g1; stats[t1].gc += g2;
+            stats[t2].gp += g2; stats[t2].gc += g1;
+
+            if (g1 > g2) {
+                stats[t1].pts += 3; stats[t1].v++;
+                stats[t1].form.push({ res: 'V', tooltip: `Vitória: ${t1} ${g1} x ${g2} ${t2}` });
+                stats[t2].d++;
+                stats[t2].form.push({ res: 'D', tooltip: `Derrota: ${t2} ${g2} x ${g1} ${t1}` });
+            } else if (g2 > g1) {
+                stats[t2].pts += 3; stats[t2].v++;
+                stats[t2].form.push({ res: 'V', tooltip: `Vitória: ${t2} ${g2} x ${g1} ${t1}` });
+                stats[t1].d++;
+                stats[t1].form.push({ res: 'D', tooltip: `Derrota: ${t1} ${g1} x ${g2} ${t2}` });
+            } else {
+                stats[t1].pts += 1; stats[t1].e++;
+                stats[t1].form.push({ res: 'E', tooltip: `Empate: ${t1} ${g1} x ${g2} ${t2}` });
+                stats[t2].pts += 1; stats[t2].e++;
+                stats[t2].form.push({ res: 'E', tooltip: `Empate: ${t2} ${g2} x ${g1} ${t1}` });
+            }
+        }
     });
 
     Object.keys(stats).forEach(t => { stats[t].sg = stats[t].gp - stats[t].gc; });
